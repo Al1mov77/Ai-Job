@@ -6,7 +6,6 @@ import { useRouter } from "next/navigation"
 import { useAuthStore } from "./store/authStore"
 import { motion, useScroll, useTransform, AnimatePresence } from "framer-motion"
 
-import heroBg from "./assets/hero-bg.png"
 import candidateCard from "./assets/candidate-card.png"
 
 export default function Home() {
@@ -85,18 +84,22 @@ export default function Home() {
       </nav>
 
       <section ref={targetRef} className="relative min-h-screen flex items-center justify-center pt-20 overflow-hidden">
+        {/* Animated Glowing Orb Background */}
         <motion.div 
           style={{ y, opacity, scale }}
-          className="absolute inset-0 z-0"
+          className="absolute inset-x-0 top-0 flex justify-center z-0 pointer-events-none"
         >
-          <Image 
-            src={heroBg} 
-            alt="Hero Background" 
-            fill 
-            className="object-cover opacity-40 brightness-50" 
-            priority
+          <motion.div
+            animate={{ 
+              rotate: 360,
+              scale: [1, 1.1, 1],
+            }}
+            transition={{ 
+              rotate: { duration: 20, repeat: Infinity, ease: "linear" },
+              scale: { duration: 8, repeat: Infinity, ease: "easeInOut" }
+            }}
+            className="w-[600px] h-[600px] md:w-[800px] md:h-[800px] rounded-full bg-gradient-to-br from-blue-600/30 via-indigo-900/20 to-transparent blur-[120px] opacity-60"
           />
-          <div className="absolute inset-0 bg-gradient-to-b from-transparent via-[#05070b]/50 to-[#05070b]" />
         </motion.div>
 
         <motion.div 
