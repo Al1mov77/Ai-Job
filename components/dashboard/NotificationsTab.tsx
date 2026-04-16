@@ -3,6 +3,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { axiosInstance } from "@/lib/axios";
 import { useAuthStore } from "@/app/store/authStore";
+import { toast } from "sonner";
 
 export default function NotificationsTab() {
   const { user } = useAuthStore();
