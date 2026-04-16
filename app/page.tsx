@@ -124,9 +124,15 @@ export default function Home() {
               placeholder="Search careers..."
             />
             {mounted && (
-              <Link href={isAuthenticated() ? (user?.role === "Organization" ? "/organization/dashboard" : "/candidate/dashboard") : "/auth/login"}>
-                <img className="rounded-[50%] w-7 h-7 cursor-pointer" src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcS5TPu3HoTZkTyxzVY6h3fuKo-nPU85G5u4Vw&s" alt="" />
-              </Link>
+              isAuthenticated() ? (
+                <Link href={user?.role === "Organization" ? "/organization/dashboard" : "/candidate/dashboard"}>
+                  <img className="rounded-[50%] w-7 h-7 cursor-pointer" src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcS5TPu3HoTZkTyxzVY6h3fuKo-nPU85G5u4Vw&s" alt="" />
+                </Link>
+              ) : (
+                <Link href="/auth/login" className="bg-white/10 border border-white/15 hover:bg-white/15 px-4 py-1.5 rounded-md text-sm font-medium transition">
+                  Sign In
+                </Link>
+              )
             )}
           </div>
 

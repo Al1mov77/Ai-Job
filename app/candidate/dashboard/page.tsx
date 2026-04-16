@@ -1,10 +1,9 @@
 "use client";
 import { useAuthStore } from "@/app/store/authStore";
-import { withProtectedRoute } from "@/lib/protectedRoute";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useState, useEffect } from "react";
-import { axiosInstance } from "@/lib/axios";
+import { axiosInstance, publicAxiosInstance } from "@/lib/axios";
 
 interface PostFeedItem {
   id: number;
@@ -17,6 +16,14 @@ interface PostFeedItem {
   likeCount: number;
   likedByMe: boolean;
   repostCount: number;
+}
+
+interface CommentItem {
+  id: number;
+  postId: number;
+  userId: number;
+  content: string;
+  createdAt: string;
 }
 
 const recommendedPeople = [
@@ -45,7 +52,7 @@ const gradients = [
 ];
 
 function DashboardPage() {
-  const { user, logout } = useAuthStore();
+  const { user, logout, loadFromStorage, isAuthenticated } = useAuthStore();
   const router = useRouter();
   const [activeTab, setActiveTab] = useState("feed");
   const [postContent, setPostContent] = useState("");
@@ -55,15 +62,28 @@ function DashboardPage() {
   const [isLoadingPosts, setIsLoadingPosts] = useState(true);
   const [showImageInput, setShowImageInput] = useState(false);
   const [postError, setPostError] = useState("");
+  const [mounted, setMounted] = useState(false);
+
+  // Comments state
+  const [expandedComments, setExpandedComments] = useState<Record<number, boolean>>({});
+  const [commentsData, setCommentsData] = useState<Record<number, CommentItem[]>>({});
+  const [isLoadingComments, setIsLoadingComments] = useState<Record<number, boolean>>({});
+  const [commentInputs, setCommentInputs] = useState<Record<number, string>>({});
+  const [isSubmittingComment, setIsSubmittingComment] = useState<Record<number, boolean>>({});
 
   useEffect(() => {
+    loadFromStorage();
+    setMounted(true);
     fetchFeed();
   }, []);
+
+  const isLoggedIn = mounted && isAuthenticated();
 
   const fetchFeed = async () => {
     setIsLoadingPosts(true);
     try {
-      const res = await axiosInstance.get("/Post/feed");
+      // Fetch all posts globally
+      const res = await axiosInstance.get("/Post");
       if (res.data?.data) {
         setPosts(res.data.data);
       } else if (Array.isArray(res.data)) {
@@ -71,16 +91,6 @@ function DashboardPage() {
       }
     } catch (err: any) {
       console.error("Failed to load feed:", err);
-      try {
-        const res = await axiosInstance.get("/Post");
-        if (res.data?.data) {
-          setPosts(res.data.data);
-        } else if (Array.isArray(res.data)) {
-          setPosts(res.data);
-        }
-      } catch (err2) {
-        console.error("Failed to load posts fallback:", err2);
-      }
     } finally {
       setIsLoadingPosts(false);
     }
@@ -92,6 +102,7 @@ function DashboardPage() {
   };
 
   const handleCreatePost = async () => {
+    if (!isLoggedIn) { router.push("/auth/login"); return; }
     if (!postContent.trim()) return;
     setIsPosting(true);
     setPostError("");
@@ -115,6 +126,7 @@ function DashboardPage() {
   };
 
   const handleLike = async (postId: number) => {
+    if (!isLoggedIn) { router.push("/auth/login"); return; }
     try {
       const res = await axiosInstance.post(`/Post/${postId}/like`);
       setPosts(prev => prev.map(p => {
@@ -122,7 +134,7 @@ function DashboardPage() {
           return {
             ...p,
             likedByMe: !p.likedByMe,
-            likeCount: p.likedByMe ? p.likeCount - 1 : p.likeCount + 1,
+            likeCount: p.likedByMe ? Math.max(0, (p.likeCount || 1) - 1) : (p.likeCount || 0) + 1,
           };
         }
         return p;
@@ -133,11 +145,12 @@ function DashboardPage() {
   };
 
   const handleRepost = async (postId: number) => {
+    if (!isLoggedIn) { router.push("/auth/login"); return; }
     try {
       await axiosInstance.post(`/Post/${postId}/repost`);
       setPosts(prev => prev.map(p => {
         if (p.id === postId) {
-          return { ...p, repostCount: p.repostCount + 1 };
+          return { ...p, repostCount: (p.repostCount || 0) + 1 };
         }
         return p;
       }));
@@ -146,7 +159,47 @@ function DashboardPage() {
     }
   };
 
-  const formatNumber = (num: number) => {
+  const handleToggleComments = async (postId: number) => {
+    const isExpanding = !expandedComments[postId];
+    setExpandedComments(prev => ({ ...prev, [postId]: isExpanding }));
+
+    if (isExpanding) {
+      setIsLoadingComments(prev => ({ ...prev, [postId]: true }));
+      try {
+        const res = await axiosInstance.get(`/Post/${postId}/comments`);
+        if (res.data?.data) {
+          setCommentsData(prev => ({ ...prev, [postId]: res.data.data }));
+        }
+      } catch (err) {
+        console.error("Failed to fetch comments:", err);
+      } finally {
+        setIsLoadingComments(prev => ({ ...prev, [postId]: false }));
+      }
+    }
+  };
+
+  const handleSubmitComment = async (postId: number) => {
+    if (!isLoggedIn) { router.push("/auth/login"); return; }
+    const content = commentInputs[postId]?.trim();
+    if (!content) return;
+
+    setIsSubmittingComment(prev => ({ ...prev, [postId]: true }));
+    try {
+      const res = await axiosInstance.post(`/Post/${postId}/comments`, { content });
+      const newComment = res.data?.data;
+      if (newComment) {
+        setCommentsData(prev => ({ ...prev, [postId]: [...(prev[postId] || []), newComment] }));
+        setCommentInputs(prev => ({ ...prev, [postId]: "" }));
+      }
+    } catch (err) {
+      console.error("Failed to post comment:", err);
+    } finally {
+      setIsSubmittingComment(prev => ({ ...prev, [postId]: false }));
+    }
+  };
+
+  const formatNumber = (num?: number) => {
+    if (num == null) return "0";
     if (num >= 1000) return (num / 1000).toFixed(1) + "k";
     return num.toString();
   };
@@ -165,7 +218,7 @@ function DashboardPage() {
     return gradients[userId % gradients.length];
   };
 
-  const userInitials = (user?.fullName || "U").split(" ").map(n => n[0]).join("").slice(0, 2);
+  const userInitials = (user?.fullName || "G").split(" ").map(n => n[0]).join("").slice(0, 2);
 
   const sidebarItems = [
     { id: "feed", label: "Feed", icon: <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z" /></svg> },
@@ -237,12 +290,21 @@ function DashboardPage() {
             Post a Job
           </button>
 
-          <button
-            onClick={handleLogout}
-            className="mt-2 w-full px-4 py-2.5 text-red-400 text-sm hover:bg-red-500/10 rounded-lg transition"
-          >
-            Logout
-          </button>
+          {isLoggedIn ? (
+            <button
+              onClick={handleLogout}
+              className="mt-2 w-full px-4 py-2.5 text-red-400 text-sm hover:bg-red-500/10 rounded-lg transition"
+            >
+              Logout
+            </button>
+          ) : (
+            <Link
+              href="/auth/login"
+              className="mt-2 w-full block text-center px-4 py-2.5 text-blue-400 text-sm hover:bg-blue-500/10 rounded-lg transition"
+            >
+              Sign In
+            </Link>
+          )}
         </aside>
 
         <main className="flex-1 lg:ml-60 min-h-screen">
@@ -256,55 +318,62 @@ function DashboardPage() {
                 </div>
               </div>
 
-              <div className="bg-white/[0.03] border border-white/[0.08] rounded-xl p-4 mb-6">
-                <div className="flex items-start gap-3">
-                  <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-cyan-400 flex items-center justify-center text-xs font-bold flex-shrink-0">
-                    {userInitials}
-                  </div>
-                  <div className="flex-1">
-                    <textarea
-                      value={postContent}
-                      onChange={(e) => setPostContent(e.target.value)}
-                      placeholder="Share an insight or update with your network..."
-                      className="w-full bg-transparent text-sm text-gray-300 placeholder-gray-600 outline-none resize-none min-h-[60px]"
-                      rows={2}
-                    />
-                    {showImageInput && (
-                      <input
-                        value={postImageUrl}
-                        onChange={(e) => setPostImageUrl(e.target.value)}
-                        placeholder="Paste image URL..."
-                        className="w-full mt-2 px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-sm outline-none focus:border-blue-500"
+              {isLoggedIn ? (
+                <div className="bg-white/[0.03] border border-white/[0.08] rounded-xl p-4 mb-6">
+                  <div className="flex items-start gap-3">
+                    <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-cyan-400 flex items-center justify-center text-xs font-bold flex-shrink-0">
+                      {userInitials}
+                    </div>
+                    <div className="flex-1">
+                      <textarea
+                        value={postContent}
+                        onChange={(e) => setPostContent(e.target.value)}
+                        placeholder="Share an insight or update with your network..."
+                        className="w-full bg-transparent text-sm text-gray-300 placeholder-gray-600 outline-none resize-none min-h-[60px]"
+                        rows={2}
                       />
-                    )}
+                      {showImageInput && (
+                        <input
+                          value={postImageUrl}
+                          onChange={(e) => setPostImageUrl(e.target.value)}
+                          placeholder="Paste image URL..."
+                          className="w-full mt-2 px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-sm outline-none focus:border-blue-500"
+                        />
+                      )}
+                    </div>
+                  </div>
+                  {postError && (
+                    <div className="mt-2 px-3 py-2 rounded-lg bg-red-500/10 border border-red-500/30 text-red-400 text-xs">
+                      {postError}
+                    </div>
+                  )}
+                  <div className="flex items-center justify-between mt-3 pt-3 border-t border-white/[0.06]">
+                    <div className="flex gap-2">
+                      <button onClick={() => setShowImageInput(!showImageInput)} className={`p-2 rounded-lg transition ${showImageInput ? 'bg-blue-500/20 text-blue-400' : 'hover:bg-white/5 text-gray-500'}`}>
+                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
+                      </button>
+                      <button className="p-2 rounded-lg hover:bg-white/5 text-gray-500">
+                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" /></svg>
+                      </button>
+                      <button className="p-2 rounded-lg hover:bg-white/5 text-gray-500">
+                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" /></svg>
+                      </button>
+                    </div>
+                    <button
+                      onClick={handleCreatePost}
+                      disabled={isPosting || !postContent.trim()}
+                      className="px-5 py-2 bg-blue-500 hover:bg-blue-600 disabled:opacity-40 disabled:cursor-not-allowed rounded-lg text-sm font-medium transition"
+                    >
+                      {isPosting ? "Posting..." : "Post"}
+                    </button>
                   </div>
                 </div>
-                {postError && (
-                  <div className="mt-2 px-3 py-2 rounded-lg bg-red-500/10 border border-red-500/30 text-red-400 text-xs">
-                    {postError}
-                  </div>
-                )}
-                <div className="flex items-center justify-between mt-3 pt-3 border-t border-white/[0.06]">
-                  <div className="flex gap-2">
-                    <button onClick={() => setShowImageInput(!showImageInput)} className={`p-2 rounded-lg transition ${showImageInput ? 'bg-blue-500/20 text-blue-400' : 'hover:bg-white/5 text-gray-500'}`}>
-                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
-                    </button>
-                    <button className="p-2 rounded-lg hover:bg-white/5 text-gray-500">
-                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" /></svg>
-                    </button>
-                    <button className="p-2 rounded-lg hover:bg-white/5 text-gray-500">
-                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" /></svg>
-                    </button>
-                  </div>
-                  <button
-                    onClick={handleCreatePost}
-                    disabled={isPosting || !postContent.trim()}
-                    className="px-5 py-2 bg-blue-500 hover:bg-blue-600 disabled:opacity-40 disabled:cursor-not-allowed rounded-lg text-sm font-medium transition"
-                  >
-                    {isPosting ? "Posting..." : "Post"}
-                  </button>
-                </div>
-              </div>
+              ) : (
+                <Link href="/auth/login" className="block bg-white/[0.03] border border-white/[0.08] rounded-xl p-5 mb-6 text-center hover:border-blue-500/30 transition-all group">
+                  <p className="text-gray-400 text-sm mb-2">Want to share your thoughts?</p>
+                  <span className="text-blue-400 font-medium text-sm group-hover:text-blue-300 transition">Sign in to create a post →</span>
+                </Link>
+              )}
 
               {isLoadingPosts ? (
                 <div className="flex flex-col items-center justify-center py-20">
@@ -354,7 +423,9 @@ function DashboardPage() {
                           <svg className="w-4 h-4" fill={post.likedByMe ? "currentColor" : "none"} stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" /></svg>
                           {formatNumber(post.likeCount)}
                         </button>
-                        <button className="flex items-center gap-2 text-gray-500 hover:text-blue-400 transition text-sm">
+                        <button 
+                          onClick={() => handleToggleComments(post.id)}
+                          className={`flex items-center gap-2 transition text-sm ${expandedComments[post.id] ? 'text-blue-400' : 'text-gray-500 hover:text-blue-400'}`}>
                           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" /></svg>
                           Comments
                         </button>
@@ -366,6 +437,74 @@ function DashboardPage() {
                           {formatNumber(post.repostCount)}
                         </button>
                       </div>
+
+                      {expandedComments[post.id] && (
+                        <div className="mt-4 pt-4 border-t border-white/[0.06]">
+                          {isLoadingComments[post.id] ? (
+                            <div className="py-4 text-center text-sm text-gray-500">Loading comments...</div>
+                          ) : (
+                            <div className="space-y-4">
+                              {(commentsData[post.id] || []).length === 0 ? (
+                                <p className="text-xs text-gray-500 italic">No comments yet. Be the first!</p>
+                              ) : (
+                                (commentsData[post.id] || []).map((comment) => (
+                                  <div key={comment.id} className="flex gap-3">
+                                    <div className={`w-8 h-8 rounded-full bg-gradient-to-br ${getAvatarForUser(comment.userId)} flex items-center justify-center text-[10px] font-bold flex-shrink-0`}>
+                                      U{comment.userId}
+                                    </div>
+                                    <div className="bg-white/5 rounded-2xl rounded-tl-none px-4 py-2.5 flex-1">
+                                      <div className="flex items-baseline justify-between mb-1">
+                                        <span className="text-xs font-semibold text-white">User #{comment.userId}</span>
+                                        <span className="text-[10px] text-gray-500">{timeAgo(comment.createdAt)}</span>
+                                      </div>
+                                      <p className="text-sm text-gray-300">{comment.content}</p>
+                                    </div>
+                                  </div>
+                                ))
+                              )}
+                            </div>
+                          )}
+
+                          {isLoggedIn ? (
+                            <div className="mt-5 flex gap-3 items-center">
+                              <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-cyan-400 flex items-center justify-center text-[10px] font-bold flex-shrink-0">
+                                {userInitials}
+                              </div>
+                              <div className="flex-1 relative">
+                                <input
+                                  type="text"
+                                  value={commentInputs[post.id] || ""}
+                                  onChange={(e) => setCommentInputs(prev => ({ ...prev, [post.id]: e.target.value }))}
+                                  onKeyDown={(e) => {
+                                    if (e.key === 'Enter') handleSubmitComment(post.id);
+                                  }}
+                                  placeholder="Write a comment..."
+                                  className="w-full bg-white/5 border border-white/10 rounded-full pl-4 pr-10 py-2.5 text-sm outline-none focus:border-blue-500 text-gray-200 transition-colors"
+                                  disabled={isSubmittingComment[post.id]}
+                                />
+                                <button
+                                  onClick={() => handleSubmitComment(post.id)}
+                                  disabled={!commentInputs[post.id]?.trim() || isSubmittingComment[post.id]}
+                                  className="absolute right-1 top-1 bottom-1 w-8 h-8 rounded-full bg-blue-500 flex items-center justify-center text-white disabled:opacity-50 disabled:cursor-not-allowed hover:bg-blue-600 transition-colors"
+                                >
+                                  {isSubmittingComment[post.id] ? (
+                                    <div className="w-3 h-3 border-2 border-white border-t-white/30 rounded-full animate-spin" />
+                                  ) : (
+                                    <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" /></svg>
+                                  )}
+                                </button>
+                              </div>
+                            </div>
+                          ) : (
+                            <div className="mt-5 text-center px-4 py-3 bg-white/5 rounded-lg border border-white/10">
+                              <p className="text-xs text-gray-400 mb-2">Want to join the discussion?</p>
+                              <Link href="/auth/login" className="inline-block text-xs font-medium text-blue-400 hover:text-blue-300">
+                                Sign in to reply
+                              </Link>
+                            </div>
+                          )}
+                        </div>
+                      )}
                     </article>
                   ))}
                 </div>
@@ -455,4 +594,4 @@ function DashboardPage() {
   );
 }
 
-export default withProtectedRoute(DashboardPage, "Candidate");
+export default DashboardPage;

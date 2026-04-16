@@ -10,14 +10,6 @@ import {
   AuthError,
 } from "@/app/types/auth";
 
-function setCookie(name: string, value: string, days: number = 7) {
-  const expires = new Date(Date.now() + days * 864e5).toUTCString();
-  document.cookie = `${name}=${encodeURIComponent(value)}; expires=${expires}; path=/`;
-}
-
-function deleteCookie(name: string) {
-  document.cookie = `${name}=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/`;
-}
 
 interface AuthStore {
   user: User | null;
@@ -56,8 +48,7 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
       localStorage.setItem("refreshToken", refreshToken);
       localStorage.setItem("user", JSON.stringify(user));
 
-      setCookie("accessToken", token);
-      setCookie("userRole", user?.role || "Candidate");
+
 
       set({
         user,
@@ -110,8 +101,7 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
       localStorage.removeItem("refreshToken");
       localStorage.removeItem("user");
 
-      deleteCookie("accessToken");
-      deleteCookie("userRole");
+
 
       set({
         user: null,
@@ -135,16 +125,14 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
       if (currentToken === accessToken) return;
       try {
         const user = JSON.parse(userStr);
-        setCookie("accessToken", accessToken);
-        setCookie("userRole", user?.role || "Candidate");
+
         set({ user, accessToken, refreshToken });
       } catch (err) {
         console.error("Error loading auth from storage:", err);
         localStorage.removeItem("accessToken");
         localStorage.removeItem("refreshToken");
         localStorage.removeItem("user");
-        deleteCookie("accessToken");
-        deleteCookie("userRole");
+
       }
     }
   },

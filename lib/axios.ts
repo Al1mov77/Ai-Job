@@ -28,8 +28,14 @@ axiosInstance.interceptors.request.use(
   (config) => {
     if (typeof window !== "undefined") {
       const accessToken = localStorage.getItem("accessToken");
-      if (accessToken) {
-        config.headers.Authorization = `Bearer ${accessToken}`;
+      if (accessToken && accessToken !== "undefined" && accessToken !== "null") {
+        // Use the safe set method for Axios ^1.x
+        config.headers.set("Authorization", `Bearer ${accessToken}`);
+      } else {
+        // Explicitly clear it to prevent sending bad headers
+        if (config.headers.has("Authorization")) {
+          config.headers.delete("Authorization");
+        }
       }
     }
     return config;
@@ -73,8 +79,6 @@ axiosInstance.interceptors.response.use(
           localStorage.setItem("refreshToken", newRefreshToken);
         }
 
-        document.cookie = `accessToken=${encodeURIComponent(newAccessToken)}; path=/; max-age=${7 * 86400}`;
-
         axiosInstance.defaults.headers.common.Authorization = `Bearer ${newAccessToken}`;
         originalRequest.headers.Authorization = `Bearer ${newAccessToken}`;
 
@@ -85,8 +89,6 @@ axiosInstance.interceptors.response.use(
         localStorage.removeItem("accessToken");
         localStorage.removeItem("refreshToken");
         localStorage.removeItem("user");
-        document.cookie = "accessToken=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/";
-        document.cookie = "userRole=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/";
         if (typeof window !== "undefined") {
           window.location.href = "/auth/login";
         }
@@ -100,5 +102,15 @@ axiosInstance.interceptors.response.use(
   }
 );
 
-export { axiosInstance, API_URL };
+// Public axios instance — no auth headers attached.
+// Use this for endpoints that should be accessible to everyone (e.g. GET /Post/feed).
+const publicAxiosInstance: AxiosInstance = axios.create({
+  baseURL: API_URL,
+  headers: {
+    "Content-Type": "application/json",
+  },
+  timeout: 15000,
+});
+
+export { axiosInstance, publicAxiosInstance, API_URL };
 export default axiosInstance;
