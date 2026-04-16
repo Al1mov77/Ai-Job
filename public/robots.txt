@@ -1,0 +1,7 @@
+User-agent: *
+Allow: /
+Disallow: /candidate/dashboard
+Disallow: /organization/dashboard
+Disallow: /auth/
+
+Sitemap: https://ai-jobbb.vercel.app/sitemap.xml
