@@ -26,6 +26,17 @@ export default function NotificationsTab() {
     return `${Math.floor(diffInHours / 24)}d ago`;
   };
 
+  const respondToConnection = async (connectionId: number, status: 'Accepted' | 'Declined') => {
+    try {
+      await axiosInstance.put(`/Connection/${connectionId}/respond`, { status });
+      toast.success(`Connection ${status.toLowerCase()}!`);
+      // Refetch notifications to update UI (usually status changes or related info might update)
+      // and maybe refetch connections if we had a connections query here.
+    } catch (err: any) {
+      toast.error(err.response?.data?.message || "Failed to update connection status.");
+    }
+  };
+
   return (
     <div>
       <h1 className="text-2xl font-bold mb-6 text-white">Notifications</h1>
@@ -48,6 +59,25 @@ export default function NotificationsTab() {
                   <div className="flex-1">
                     <p className="text-sm font-semibold text-white mb-1">{notif.title}</p>
                     <p className="text-sm text-gray-300 leading-relaxed">{notif.message}</p>
+                    
+                    {/* Action buttons for connection requests */}
+                    {notif.type === 'ConnectionRequest' && (
+                      <div className="flex gap-3 mt-4">
+                        <button 
+                          onClick={() => respondToConnection(notif.relatedId, 'Accepted')}
+                          className="px-4 py-1.5 bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold rounded-lg transition shadow-lg shadow-blue-600/20"
+                        >
+                          Accept
+                        </button>
+                        <button 
+                          onClick={() => respondToConnection(notif.relatedId, 'Declined')}
+                          className="px-4 py-1.5 bg-white/5 border border-white/10 hover:bg-white/10 text-white text-xs font-bold rounded-lg transition"
+                        >
+                          Decline
+                        </button>
+                      </div>
+                    )}
+
                     <p className="text-xs text-gray-500 mt-2 font-medium">{timeAgo(notif.createdAt)}</p>
                   </div>
                   {!notif.isRead && (
