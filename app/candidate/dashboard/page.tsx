@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useState, useEffect } from "react";
 import { axiosInstance, publicAxiosInstance } from "@/lib/axios";
 import { toast } from "sonner";
+import NotificationsTab from "@/components/dashboard/NotificationsTab";
 
 interface PostFeedItem {
   id: number;
@@ -335,8 +336,12 @@ function DashboardPage() {
         <main className="flex-1 lg:ml-64 min-h-screen w-full">
           <div className="flex gap-10 p-6 lg:p-10 w-full min-w-0">
             <div className="flex-1 min-w-0">
-              <div className="flex items-center justify-between mb-6">
-                <h1 className="text-2xl font-bold">Curated Feed</h1>
+              {activeTab === 'notifications' ? (
+                <NotificationsTab />
+              ) : (
+                <>
+                  <div className="flex items-center justify-between mb-6">
+                    <h1 className="text-2xl font-bold">Curated Feed</h1>
                 <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/20">
                   <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
                   <span className="text-xs text-emerald-400 font-medium">AI RELEVANCE ACTIVE</span>
@@ -419,11 +424,15 @@ function DashboardPage() {
                     <article key={post.id} className="bg-white/[0.03] border border-white/[0.08] rounded-xl p-5 hover:border-white/[0.15] transition-all">
                       <div className="flex items-start justify-between mb-3">
                         <div className="flex items-center gap-3">
-                          <div className={`w-11 h-11 rounded-full bg-gradient-to-br ${getAvatarForUser(post.userId)} flex items-center justify-center text-xs font-bold flex-shrink-0`}>
-                            U{post.userId}
-                          </div>
+                          <Link href={`/candidate/profile/${post.userId}`}>
+                            <div className={`w-11 h-11 rounded-full bg-gradient-to-br ${getAvatarForUser(post.userId)} flex items-center justify-center text-xs font-bold flex-shrink-0 cursor-pointer hover:opacity-80 transition`}>
+                              U{post.userId}
+                            </div>
+                          </Link>
                           <div>
-                            <p className="text-sm font-semibold text-white">User #{post.userId}</p>
+                            <Link href={`/candidate/profile/${post.userId}`}>
+                              <p className="text-sm font-semibold text-white hover:underline cursor-pointer">User #{post.userId}</p>
+                            </Link>
                             <p className="text-xs text-gray-500">{timeAgo(post.createdAt)}</p>
                           </div>
                         </div>
@@ -556,6 +565,8 @@ function DashboardPage() {
                     </article>
                   ))}
                 </div>
+              )}
+                </>
               )}
             </div>
 

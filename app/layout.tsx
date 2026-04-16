@@ -21,6 +21,7 @@ export const metadata: Metadata = {
 };
 
 import { Toaster } from 'sonner';
+import { ReactQueryProvider } from "@/components/providers/ReactQueryProvider";
 
 export default function RootLayout({
   children,
@@ -33,8 +34,10 @@ export default function RootLayout({
       className={cn("h-full", "antialiased", geistSans.variable, geistMono.variable, "font-sans", instrumentSans.variable)}
     >
       <body className="min-h-full flex flex-col">
-        {children}
-        <Toaster theme="dark" position="bottom-right" />
+        <ReactQueryProvider>
+          {children}
+          <Toaster theme="dark" position="bottom-right" />
+        </ReactQueryProvider>
       </body>
     </html>
   );
