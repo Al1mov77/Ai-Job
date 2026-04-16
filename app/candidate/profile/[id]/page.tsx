@@ -106,6 +106,8 @@ export default function ProfilePage() {
   const followersCount = connections?.filter((c: any) => c.addresseeId === userId && c.status === 'Accepted').length || 0;
   const followingCount = connections?.filter((c: any) => c.requesterId === userId && c.status === 'Accepted').length || 0;
 
+  const isOwnProfile = mounted && user && user.id.toString() === userId.toString();
+
   const handleFollow = async () => {
     if (!isLoggedIn) {
       toast.error("You must be logged in to connect!");
@@ -220,18 +222,27 @@ export default function ProfilePage() {
 
                       {/* Actions */}
                       <div className="flex items-center gap-3 w-full sm:w-auto">
-                        <button 
-                          onClick={handleFollow}
-                          disabled={isFollowing}
-                          className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-6 py-2.5 bg-blue-600 hover:bg-blue-500 disabled:opacity-50 text-white rounded-lg font-medium text-sm transition-colors shadow-lg shadow-blue-600/20"
-                        >
-                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" /></svg>
-                          {isFollowing ? "Pending" : "Follow"}
-                        </button>
-                        <button className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-6 py-2.5 bg-white/5 border border-white/10 hover:bg-white/10 text-white rounded-lg font-medium text-sm transition-colors">
-                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" /></svg>
-                          Message
-                        </button>
+                        {isOwnProfile ? (
+                          <button className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-6 py-2.5 bg-white/5 border border-white/10 hover:bg-white/10 text-white rounded-lg font-medium text-sm transition-colors">
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" /></svg>
+                            Edit Profile
+                          </button>
+                        ) : (
+                          <>
+                            <button 
+                              onClick={handleFollow}
+                              disabled={isFollowing}
+                              className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-6 py-2.5 bg-blue-600 hover:bg-blue-500 disabled:opacity-50 text-white rounded-lg font-medium text-sm transition-colors shadow-lg shadow-blue-600/20"
+                            >
+                              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" /></svg>
+                              {isFollowing ? "Pending" : "Follow"}
+                            </button>
+                            <button className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-6 py-2.5 bg-white/5 border border-white/10 hover:bg-white/10 text-white rounded-lg font-medium text-sm transition-colors">
+                              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" /></svg>
+                              Message
+                            </button>
+                          </>
+                        )}
                       </div>
                     </div>
 
