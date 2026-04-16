@@ -5,13 +5,18 @@ import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { useAuthStore } from "./store/authStore"
 import { motion, useScroll, useTransform, AnimatePresence } from "framer-motion"
+import { useLanguageStore } from "./store/languageStore"
+import { translations } from "./locales/translations"
+import LanguageSwitcher from "@/components/LanguageSwitcher"
 
 import candidateCard from "./assets/candidate-card.png"
 
 export default function Home() {
   const [open, setOpen] = useState(false)
   const { isAuthenticated, loadFromStorage, user } = useAuthStore()
+  const { currentLanguage, loadLanguage } = useLanguageStore()
   const [mounted, setMounted] = useState(false)
+  const t = translations[currentLanguage]
   const router = useRouter()
   
   const targetRef = useRef(null)
@@ -35,6 +40,7 @@ export default function Home() {
 
   useEffect(() => {
     loadFromStorage()
+    loadLanguage()
     setMounted(true)
   }, [])
 
@@ -55,16 +61,17 @@ export default function Home() {
           AIJob
         </motion.div>
 
-        <div className="hidden md:flex gap-8 text-sm font-medium text-gray-400">
-          <Link className="hover:text-white transition" href="/candidate/dashboard">Platform</Link>
-          <a className="hover:text-white transition" href="#features">Features</a>
-          <a className="hover:text-white transition" href="#talent">Talent</a>
+        <div className="hidden md:flex gap-8 text-sm font-medium text-gray-400 items-center">
+          <Link className="hover:text-white transition" href="/candidate/dashboard">{t.nav.platform}</Link>
+          <a className="hover:text-white transition" href="#features">{t.nav.features}</a>
+          <a className="hover:text-white transition" href="#talent">{t.nav.talent}</a>
         </div>
         <motion.div 
           initial={{ opacity: 0, x: 20 }}
           animate={{ opacity: 1, x: 0 }}
           className="flex items-center gap-4"
         >
+          <LanguageSwitcher />
           {mounted && (
             isAuthenticated() ? (
               <Link href={user?.role === "Organization" ? "/organization/dashboard" : "/candidate/dashboard"}>
@@ -75,8 +82,8 @@ export default function Home() {
                 </div>
               </Link>
             ) : (
-              <Link href="/auth/login" className="px-5 py-2 rounded-full bg-white text-black text-sm font-semibold hover:bg-gray-200 transition">
-                Sign In
+              <Link href="/auth/login" className="px-5 py-2 rounded-full bg-white text-black text-sm font-semibold hover:bg-gray-200 transition whitespace-nowrap">
+                {t.nav.signIn}
               </Link>
             )
           )}
@@ -129,19 +136,18 @@ export default function Home() {
               <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
               <span className="relative inline-flex rounded-full h-2 w-2 bg-blue-500"></span>
             </span>
-            Next-Gen Career Intelligence
+            {t.hero.badge}
           </motion.div>
 
           <h1 className="text-5xl md:text-8xl font-black mb-8 leading-[1.1] tracking-tighter">
-            Work that <br />
+            {t.hero.titleStart} <br />
             <span className="bg-gradient-to-r from-blue-400 via-indigo-400 to-purple-400 bg-clip-text text-transparent">
-              actually fits.
+              {t.hero.titleFit}
             </span>
           </h1>
 
           <p className="text-lg md:text-xl text-gray-400 max-w-2xl mx-auto mb-10 leading-relaxed font-light">
-            AIJob leverages deep career intelligence to move beyond keywords. 
-            Discover roles curated specifically for your trajectory, skills, and values.
+            {t.hero.description}
           </p>
 
           <div className="flex flex-col sm:flex-row items-center justify-center gap-5">
@@ -150,10 +156,10 @@ export default function Home() {
               className="group relative px-8 py-4 bg-white text-black rounded-full font-bold transition overflow-hidden"
             >
               <div className="absolute inset-0 bg-gradient-to-r from-blue-500/20 to-purple-500/20 translate-y-full group-hover:translate-y-0 transition-transform" />
-              <span className="relative">Start My Curation →</span>
+              <span className="relative">{t.hero.buttonStart} →</span>
             </button>
             <button className="px-8 py-4 bg-white/5 border border-white/10 rounded-full font-bold hover:bg-white/10 transition">
-              Hire for Your Team
+              {t.hero.buttonHire}
             </button>
           </div>
         </motion.div>
@@ -184,7 +190,7 @@ export default function Home() {
               className="text-center"
             >
               <div className="text-3xl font-black mb-1 bg-gradient-to-b from-white to-gray-500 bg-clip-text text-transparent">{stat.value}</div>
-              <div className="text-[10px] text-gray-500 font-bold tracking-widest uppercase">{stat.label}</div>
+              <div className="text-[10px] text-gray-500 font-bold tracking-widest uppercase">{t.stats[stat.label.toLowerCase().replace(" ", "")] || stat.label}</div>
             </motion.div>
           ))}
         </div>
@@ -193,8 +199,8 @@ export default function Home() {
       <section id="features" className="relative z-10 py-32 px-6 overflow-hidden">
         <div className="max-w-6xl mx-auto">
           <div className="text-center mb-20 space-y-4">
-            <h2 className="text-4xl md:text-6xl font-bold tracking-tighter">Everything to win.</h2>
-            <p className="text-gray-500 max-w-xl mx-auto">A unified ecosystem built for the future of professional networking and recruitment.</p>
+            <h2 className="text-4xl md:text-6xl font-bold tracking-tighter">{t.bento.title}</h2>
+            <p className="text-gray-500 max-w-xl mx-auto">{t.bento.sub}</p>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-12 gap-5 h-auto md:h-[600px]">
@@ -209,12 +215,12 @@ export default function Home() {
                   <div className="w-12 h-12 rounded-2xl bg-blue-500/20 border border-blue-500/30 flex items-center justify-center mb-6">
                     <svg className="w-6 h-6 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M13 10V3L4 14h7v7l9-11h-7z" strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} /></svg>
                   </div>
-                  <h3 className="text-2xl font-bold mb-4">Neural Matchmaking</h3>
-                  <p className="text-gray-400 max-w-sm">Our AI analyzes your true potential, looking past keywords to find roles that perfectly align with your career trajectory.</p>
-                </div>
-                <div className="mt-8 p-4 rounded-xl bg-white/5 border border-white/5 italic text-sm text-gray-500">
-                  &ldquo;Successfully matched 45 candidates this week in SF.&rdquo;
-                </div>
+                    <h3 className="text-2xl font-bold mb-4">{t.bento.f1.title}</h3>
+                    <p className="text-gray-400 max-w-sm">{t.bento.f1.desc}</p>
+                  </div>
+                  <div className="mt-8 p-4 rounded-xl bg-white/5 border border-white/5 italic text-sm text-gray-500">
+                    &ldquo;{t.bento.f1.quote}&rdquo;
+                  </div>
               </div>
             </motion.div>
 
@@ -226,8 +232,8 @@ export default function Home() {
               <div className="w-12 h-12 rounded-2xl bg-purple-500/20 border border-purple-500/30 flex items-center justify-center mb-6 text-purple-400">
                 <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z" strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} /></svg>
               </div>
-              <h3 className="text-2xl font-bold mb-4">Unified Feed</h3>
-              <p className="text-gray-400">The social layer of recruitment. Engage with companies, recruiters, and peers in a real-time professional environment.</p>
+              <h3 className="text-2xl font-bold mb-4">{t.bento.f2.title}</h3>
+              <p className="text-gray-400">{t.bento.f2.desc}</p>
             </motion.div>
 
             {/* Feature 3: Small */}
@@ -238,8 +244,8 @@ export default function Home() {
               <div className="w-12 h-12 rounded-2xl bg-emerald-500/20 border border-emerald-500/30 flex items-center justify-center mb-6 text-emerald-400">
                 <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} /></svg>
               </div>
-              <h3 className="text-2xl font-bold mb-4">Verified Talent</h3>
-              <p className="text-gray-400">Skill verification and background highlights integrated directly into every candidate profile.</p>
+              <h3 className="text-2xl font-bold mb-4">{t.bento.f3.title}</h3>
+              <p className="text-gray-400">{t.bento.f3.desc}</p>
             </motion.div>
             <motion.div 
               whileHover={{ y: -5 }}
@@ -251,8 +257,8 @@ export default function Home() {
                   <div className="w-12 h-12 rounded-2xl bg-indigo-500/20 border border-indigo-500/30 flex items-center justify-center mb-6 text-indigo-400">
                     <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} /></svg>
                   </div>
-                  <h3 className="text-2xl font-bold mb-4">Market Intelligence</h3>
-                  <p className="text-gray-400 max-w-sm">Stay ahead with real-time briefing on hiring trends, salary shifts, and technology adoption rates.</p>
+                  <h3 className="text-2xl font-bold mb-4">{t.bento.f4.title}</h3>
+                  <p className="text-gray-400 max-w-sm">{t.bento.f4.desc}</p>
                 </div>
               </div>
             </motion.div>
@@ -263,17 +269,17 @@ export default function Home() {
       <section className="relative z-10 py-32 bg-white/5 border-y border-white/5">
         <div className="max-w-6xl mx-auto px-6">
           <div className="text-center mb-20">
-            <h2 className="text-4xl font-black mb-4 tracking-tighter">Your path to success.</h2>
-            <p className="text-gray-500">Transforming the complex search into a three-step journey.</p>
+            <h2 className="text-4xl font-black mb-4 tracking-tighter">{t.journey.title}</h2>
+            <p className="text-gray-500">{t.journey.sub}</p>
           </div>
 
           <div className="grid md:grid-cols-3 gap-12 relative">
             <div className="absolute top-1/2 left-0 w-full h-0.5 bg-gradient-to-r from-transparent via-white/5 to-transparent hidden md:block" />
             
             {[
-              { title: "Define Your Path", desc: "Share your skills, values, and vision for the future." },
-              { title: "Review Curations", desc: "Our AI presents roles that aren't just open—they're right." },
-              { title: "Fast-Track Hire", desc: "Direct connections and verified checks speed up the process." },
+              { title: t.journey.s1.title, desc: t.journey.s1.desc },
+              { title: t.journey.s2.title, desc: t.journey.s2.desc },
+              { title: t.journey.s3.title, desc: t.journey.s3.desc },
             ].map((step, i) => (
               <motion.div 
                 key={i}
@@ -323,12 +329,12 @@ export default function Home() {
             whileInView={{ opacity: 1, y: 0 }}
             className="relative z-10"
           >
-            <h2 className="text-4xl md:text-6xl font-black text-white mb-8 tracking-tighter">Ready to evolve <br /> your career?</h2>
+            <h2 className="text-4xl md:text-6xl font-black text-white mb-8 tracking-tighter">{t.cta.title}</h2>
             <button 
               onClick={handleStart}
               className="px-10 py-5 bg-white text-blue-600 rounded-full font-black text-lg hover:scale-105 transition shadow-xl"
             >
-              Get Started Now
+              {t.cta.button}
             </button>
           </motion.div>
         </div>
