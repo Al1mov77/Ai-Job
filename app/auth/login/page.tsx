@@ -5,6 +5,7 @@ import { useState, useEffect, Suspense } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useAuthStore } from "@/app/store/authStore";
+import { toast } from "sonner";
 
 export default function LoginPage() {
   return (
@@ -72,6 +73,7 @@ function LoginContent() {
 
     try {
       await login({ email, password });
+      toast.success("Successfully logged in!");
       const redirect = searchParams.get("redirect");
       const { user: currentUser } = useAuthStore.getState();
       if (redirect) {
@@ -85,6 +87,7 @@ function LoginContent() {
       }
     } catch (err: any) {
       console.error("Login error:", err);
+      toast.error(err.response?.data?.message || err.message || "Failed to log in.");
       if (err.message === "Network Error" || !err.response) {
         setNetworkError(
           "Cannot connect to server. Please check if API is available."

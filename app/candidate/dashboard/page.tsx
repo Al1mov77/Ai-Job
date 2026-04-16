@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useState, useEffect } from "react";
 import { axiosInstance, publicAxiosInstance } from "@/lib/axios";
+import { toast } from "sonner";
 
 interface PostFeedItem {
   id: number;
@@ -63,6 +64,7 @@ function DashboardPage() {
   const [showImageInput, setShowImageInput] = useState(false);
   const [postError, setPostError] = useState("");
   const [mounted, setMounted] = useState(false);
+  const [activeDropdown, setActiveDropdown] = useState<number | null>(null);
 
   // Comments state
   const [expandedComments, setExpandedComments] = useState<Record<number, boolean>>({});
@@ -118,9 +120,11 @@ function DashboardPage() {
       setPostImageUrl("");
       setShowImageInput(false);
       await fetchFeed();
+      toast.success("Post created successfully!");
     } catch (err: any) {
       console.error("Failed to create post:", err);
       setPostError(err.response?.data?.description?.[0] || err.response?.data?.message || "Failed to create post");
+      toast.error("Failed to create post");
     } finally {
       setIsPosting(false);
     }
@@ -142,6 +146,7 @@ function DashboardPage() {
       }));
     } catch (err) {
       console.error("Failed to like post:", err);
+      toast.error("Error liking post");
     }
   };
 
@@ -155,8 +160,10 @@ function DashboardPage() {
         }
         return p;
       }));
+      toast.success("Post reposted!");
     } catch (err) {
       console.error("Failed to repost:", err);
+      toast.error("Failed to repost");
     }
   };
 
@@ -194,11 +201,25 @@ function DashboardPage() {
       if (newComment) {
         setCommentsData(prev => ({ ...prev, [postId]: [...(prev[postId] || []), newComment] }));
         setCommentInputs(prev => ({ ...prev, [postId]: "" }));
+        toast.success("Comment added!");
       }
     } catch (err) {
       console.error("Failed to post comment:", err);
+      toast.error("Failed to add comment");
     } finally {
       setIsSubmittingComment(prev => ({ ...prev, [postId]: false }));
+    }
+  };
+
+  const handleDeletePost = async (postId: number) => {
+    try {
+      await axiosInstance.delete(`/Post/${postId}`);
+      setPosts(prev => prev.filter(p => p.id !== postId));
+      toast.success("Post deleted successfully!");
+      setActiveDropdown(null);
+    } catch (err: any) {
+      console.error("Failed to delete post:", err);
+      toast.error(err.response?.data?.message || "Failed to delete post");
     }
   };
 
@@ -235,8 +256,8 @@ function DashboardPage() {
 
   return (
     <div className="min-h-screen bg-[#0a0e1a] text-white">
-      <header className="fixed top-0 left-0 right-0 z-50 border-b border-white/10 bg-[#0a0e1a]/95 backdrop-blur-md px-6 py-3">
-        <div className="max-w-[1400px] mx-auto flex items-center justify-between">
+      <header className="fixed top-0 left-0 right-0 z-50 border-b border-white/10 bg-[#0a0e1a]/95 backdrop-blur-md px-8 py-3">
+        <div className="w-full mx-auto flex items-center justify-between">
           <div className="flex items-center gap-8">
             <Link href="/" className="text-xl font-bold text-white">AIJob</Link>
             <nav className="hidden md:flex gap-6 text-sm">
@@ -260,8 +281,8 @@ function DashboardPage() {
         </div>
       </header>
 
-      <div className="pt-16 max-w-[1400px] mx-auto flex">
-        <aside className="hidden lg:flex flex-col w-60 fixed top-16 left-0 bottom-0 border-r border-white/10 p-5 xl:left-auto" style={{ marginLeft: 'max(0px, calc((100vw - 1400px) / 2))' }}>
+      <div className="pt-16 w-full flex">
+        <aside className="hidden lg:flex flex-col w-64 fixed top-16 left-0 bottom-0 border-r border-white/10 p-5">
           <div className="mb-6">
             <h2 className="text-sm font-semibold text-white">AIJob Platform</h2>
             <p className="text-xs text-gray-500">Professional Network</p>
@@ -311,9 +332,9 @@ function DashboardPage() {
           )}
         </aside>
 
-        <main className="flex-1 lg:ml-60 min-h-screen">
-          <div className="flex gap-6 p-6">
-            <div className="flex-1 max-w-2xl">
+        <main className="flex-1 lg:ml-64 min-h-screen w-full">
+          <div className="flex gap-10 p-6 lg:p-10 w-full min-w-0">
+            <div className="flex-1 min-w-0">
               <div className="flex items-center justify-between mb-6">
                 <h1 className="text-2xl font-bold">Curated Feed</h1>
                 <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/20">
@@ -406,9 +427,28 @@ function DashboardPage() {
                             <p className="text-xs text-gray-500">{timeAgo(post.createdAt)}</p>
                           </div>
                         </div>
-                        <button className="p-1 rounded hover:bg-white/5 text-gray-500">
-                          <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path d="M10 6a2 2 0 110-4 2 2 0 010 4zM10 12a2 2 0 110-4 2 2 0 010 4zM10 18a2 2 0 110-4 2 2 0 010 4z" /></svg>
-                        </button>
+                        {user?.id === post.userId.toString() && (
+                          <div className="relative">
+                            <button 
+                              onClick={() => setActiveDropdown(activeDropdown === post.id ? null : post.id)}
+                              className="p-1 rounded hover:bg-white/5 text-gray-500 transition-colors"
+                            >
+                              <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path d="M10 6a2 2 0 110-4 2 2 0 010 4zM10 12a2 2 0 110-4 2 2 0 010 4zM10 18a2 2 0 110-4 2 2 0 010 4z" /></svg>
+                            </button>
+                            
+                            {activeDropdown === post.id && (
+                              <div className="absolute right-0 mt-1 w-36 bg-[#0a0e1a] border border-white/10 rounded-lg shadow-xl z-10 overflow-hidden">
+                                <button
+                                  onClick={() => handleDeletePost(post.id)}
+                                  className="w-full text-left px-4 py-2.5 text-sm text-red-400 hover:bg-red-500/10 flex items-center gap-2 transition-colors"
+                                >
+                                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                                  Delete post
+                                </button>
+                              </div>
+                            )}
+                          </div>
+                        )}
                       </div>
 
                       <p className="text-sm text-gray-300 leading-relaxed mb-4 whitespace-pre-wrap">{post.content}</p>

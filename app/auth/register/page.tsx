@@ -5,6 +5,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useAuthStore } from "@/app/store/authStore";
+import { toast } from "sonner";
 
 export default function RegisterPage() {
   const [formData, setFormData] = useState({
@@ -69,9 +70,11 @@ export default function RegisterPage() {
         role: "Candidate",
       });
 
+      toast.success("Account created successfully! Please sign in.");
       router.push("/auth/login?registered=true");
     } catch (err: any) {
       console.error("Register error:", err);
+      toast.error(err.response?.data?.message || err.message || "Failed to create account.");
       if (err.message === "Network Error" || !err.response) {
         setNetworkError(
           "Cannot connect to server. Please check if API is available at http://157.180.29.248:8090/api"
