@@ -176,10 +176,10 @@ export default function Home() {
       <section className="relative z-10 py-20 border-y border-white/5 bg-[#0e121a]/30 backdrop-blur-sm">
         <div className="max-w-6xl mx-auto px-6 grid grid-cols-2 md:grid-cols-4 gap-8">
           {[
-            { label: "Active Talent", value: "128k+" },
-            { label: "Companies", value: "540+" },
-            { label: "AI Matches", value: "1.2M" },
-            { label: "Success Rate", value: "94%" },
+            { key: "talent", label: "Active Talent", value: "128k+" },
+            { key: "companies", label: "Companies", value: "540+" },
+            { key: "matches", label: "AI Matches", value: "1.2M" },
+            { key: "success", label: "Success Rate", value: "94%" },
           ].map((stat, i) => (
             <motion.div 
               key={i}
@@ -190,7 +190,7 @@ export default function Home() {
               className="text-center"
             >
               <div className="text-3xl font-black mb-1 bg-gradient-to-b from-white to-gray-500 bg-clip-text text-transparent">{stat.value}</div>
-              <div className="text-[10px] text-gray-500 font-bold tracking-widest uppercase">{t.stats[stat.label.toLowerCase().replace(" ", "")] || stat.label}</div>
+              <div className="text-[10px] text-gray-500 font-bold tracking-widest uppercase">{t.stats[stat.key as keyof typeof t.stats] || stat.label}</div>
             </motion.div>
           ))}
         </div>
