@@ -3,7 +3,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { axiosInstance } from "@/lib/axios";
 import { useParams, useRouter } from "next/navigation";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { toast } from "sonner";
 import Link from "next/link";
 import { useAuthStore } from "@/app/store/authStore";
@@ -47,11 +47,19 @@ interface ProfileData extends UserProfile {
 export default function ProfilePage() {
   const { id } = useParams();
   const userId = typeof id === "string" ? parseInt(id, 10) : 0;
-  const { isLoggedIn, user, logout } = useAuthStore();
+  const { user, logout, isAuthenticated, loadFromStorage } = useAuthStore();
   const router = useRouter();
 
+  const [mounted, setMounted] = useState(false);
   const [isFollowing, setIsFollowing] = useState(false);
   const [activeTab, setActiveTab] = useState("profile");
+
+  useEffect(() => {
+    loadFromStorage();
+    setMounted(true);
+  }, []);
+
+  const isLoggedIn = mounted && isAuthenticated();
 
   const { data: profile, isLoading, isError } = useQuery<ProfileData>({
     queryKey: ["profile", userId],
