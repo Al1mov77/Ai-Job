@@ -1,16 +1,29 @@
 "use client"
 import Image from "next/image"
-import img1 from "./assets/1.png"
 import { useState, useEffect, useRef } from "react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { useAuthStore } from "./store/authStore"
+import { motion, useScroll, useTransform, AnimatePresence } from "framer-motion"
+
+import heroBg from "./assets/hero-bg.png"
+import candidateCard from "./assets/candidate-card.png"
 
 export default function Home() {
   const [open, setOpen] = useState(false)
   const { isAuthenticated, loadFromStorage, user } = useAuthStore()
   const [mounted, setMounted] = useState(false)
   const router = useRouter()
+  
+  const targetRef = useRef(null)
+  const { scrollYProgress } = useScroll({
+    target: targetRef,
+    offset: ["start start", "end start"],
+  })
+
+  const opacity = useTransform(scrollYProgress, [0, 0.5], [1, 0])
+  const scale = useTransform(scrollYProgress, [0, 0.5], [1, 0.8])
+  const y = useTransform(scrollYProgress, [0, 0.5], [0, -100])
 
   const handleStart = () => {
     if (isAuthenticated()) {
@@ -27,399 +40,343 @@ export default function Home() {
   }, [])
 
   const reviews = [
-    {
-      name: "Alex Johnson",
-      role: "Senior Developer",
-      company: "Google",
-      text: "AIJob completely transformed my job search. The AI understood my exact skillset and matched me with roles I never would have found on my own. Landed my dream job in 2 weeks!",
-      stars: 5,
-      avatar: "AJ",
-      gradient: "from-blue-500 to-cyan-400",
-    },
-    {
-      name: "Maria Santos",
-      role: "Product Designer",
-      company: "Figma",
-      text: "Unlike other platforms, AIJob actually understands what I'm looking for. The culture-fit analysis was spot-on — every recommendation felt personally curated for me.",
-      stars: 5,
-      avatar: "MS",
-      gradient: "from-purple-500 to-pink-400",
-    },
-    {
-      name: "David Chen",
-      role: "Data Scientist",
-      company: "Netflix",
-      text: "Way better than LinkedIn search. The AI-powered matching saved me hundreds of hours. I got 3 offers within the first month — all perfect fits for my career goals.",
-      stars: 5,
-      avatar: "DC",
-      gradient: "from-emerald-500 to-teal-400",
-    },
-    {
-      name: "Sophie Williams",
-      role: "Engineering Manager",
-      company: "Stripe",
-      text: "The clean UI and incredibly accurate matches make AIJob my go-to platform. The team dynamics insights helped me find a company where I truly belong.",
-      stars: 5,
-      avatar: "SW",
-      gradient: "from-orange-500 to-amber-400",
-    },
-    {
-      name: "Liam O'Brien",
-      role: "Frontend Engineer",
-      company: "Vercel",
-      text: "Saved me tons of time during my job search. The pre-vetted assessments meant companies already knew my skills. No more repetitive coding tests!",
-      stars: 5,
-      avatar: "LO",
-      gradient: "from-rose-500 to-red-400",
-    },
-    {
-      name: "Emma Zhang",
-      role: "ML Engineer",
-      company: "OpenAI",
-      text: "The career trajectory analysis is incredible. AIJob didn't just find me a job — it found me the next step in my career. The salary insights were also amazingly accurate.",
-      stars: 5,
-      avatar: "EZ",
-      gradient: "from-indigo-500 to-violet-400",
-    },
-    {
-      name: "James Park",
-      role: "DevOps Lead",
-      company: "AWS",
-      text: "I was skeptical about AI job matching, but AIJob blew me away. The platform found opportunities that aligned perfectly with my values and work style preferences.",
-      stars: 4,
-      avatar: "JP",
-      gradient: "from-sky-500 to-blue-400",
-    },
-    {
-      name: "Aisha Patel",
-      role: "iOS Developer",
-      company: "Apple",
-      text: "From signup to offer in just 10 days. AIJob's intelligent matching is leagues ahead of anything else. The interview prep suggestions were incredibly helpful too.",
-      stars: 5,
-      avatar: "AP",
-      gradient: "from-fuchsia-500 to-purple-400",
-    },
+    { name: "Alex Johnson", role: "Senior Developer", company: "Google", text: "AIJob completely transformed my job search. The AI understood my exact skillset and matched me with roles I never would have found on my own.", stars: 5, avatar: "AJ", gradient: "from-blue-500 to-cyan-400" },
+    { name: "Maria Santos", role: "Product Designer", company: "Figma", text: "Unlike other platforms, AIJob actually understands what I'm looking for. The culture-fit analysis was spot-on.", stars: 5, avatar: "MS", gradient: "from-purple-500 to-pink-400" },
+    { name: "David Chen", role: "Data Scientist", company: "Netflix", text: "Way better than LinkedIn search. The AI-powered matching saved me hundreds of hours. 3 offers in the first month!", stars: 5, avatar: "DC", gradient: "from-emerald-500 to-teal-400" },
   ]
 
-  const row1 = reviews.slice(0, 4)
-  const row2 = reviews.slice(4, 8)
-
   return (
-    <>
-      <main className="min-h-screen bg-[#05070b] text-white relative overflow-hidden">
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_30%,rgba(59,130,246,0.25),transparent_60%)]" />
+    <div className="bg-[#05070b] text-white selection:bg-blue-500/30">
+      <nav className="fixed top-0 left-0 right-0 z-50 border-b border-white/5 bg-[#05070b]/80 backdrop-blur-xl px-6 py-4 flex items-center justify-between">
+        <motion.div 
+          initial={{ opacity: 0, x: -20 }}
+          animate={{ opacity: 1, x: 0 }}
+          className="text-2xl font-bold bg-gradient-to-r from-white to-gray-500 bg-clip-text text-transparent"
+        >
+          AIJob
+        </motion.div>
 
-        <header className="relative z-10 w-full px-6 py-4 flex items-center justify-between">
-          <div className="text-xl font-semibold tracking-tight">AIJob</div>
+        <div className="hidden md:flex gap-8 text-sm font-medium text-gray-400">
+          <Link className="hover:text-white transition" href="/candidate/dashboard">Platform</Link>
+          <a className="hover:text-white transition" href="#features">Features</a>
+          <a className="hover:text-white transition" href="#talent">Talent</a>
+        </div>
+        <motion.div 
+          initial={{ opacity: 0, x: 20 }}
+          animate={{ opacity: 1, x: 0 }}
+          className="flex items-center gap-4"
+        >
+          {mounted && (
+            isAuthenticated() ? (
+              <Link href={user?.role === "Organization" ? "/organization/dashboard" : "/candidate/dashboard"}>
+                <div className="w-9 h-9 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 p-0.5 shadow-lg shadow-blue-500/20">
+                  <div className="w-full h-full rounded-full bg-[#05070b] flex items-center justify-center text-xs font-bold">
+                    {user?.fullName?.charAt(0) || "U"}
+                  </div>
+                </div>
+              </Link>
+            ) : (
+              <Link href="/auth/login" className="px-5 py-2 rounded-full bg-white text-black text-sm font-semibold hover:bg-gray-200 transition">
+                Sign In
+              </Link>
+            )
+          )}
+        </motion.div>
+      </nav>
 
-          <nav className="hidden md:flex gap-8 text-sm text-gray-300">
-            <Link className="hover:text-white" href={mounted && isAuthenticated() ? (user?.role === "Organization" ? "/organization/dashboard" : "/candidate/dashboard") : "/auth/login"}>Dashboard</Link>
-            <a className="hover:text-white" href="#">Talent</a>
-            <a className="hover:text-white" href="#">Enterprise</a>
-          </nav>
+      <section ref={targetRef} className="relative min-h-screen flex items-center justify-center pt-20 overflow-hidden">
+        <motion.div 
+          style={{ y, opacity, scale }}
+          className="absolute inset-0 z-0"
+        >
+          <Image 
+            src={heroBg} 
+            alt="Hero Background" 
+            fill 
+            className="object-cover opacity-40 brightness-50" 
+            priority
+          />
+          <div className="absolute inset-0 bg-gradient-to-b from-transparent via-[#05070b]/50 to-[#05070b]" />
+        </motion.div>
 
-          <div className="hidden md:flex items-center gap-4">
-            <input
-              className="bg-white/5 border border-white/10 rounded-md px-3 py-1.5 text-sm outline-none focus:border-blue-500"
-              placeholder="Search careers..."
-            />
-            {mounted && (
-              isAuthenticated() ? (
-                <Link href={user?.role === "Organization" ? "/organization/dashboard" : "/candidate/dashboard"}>
-                  <img className="rounded-[50%] w-7 h-7 cursor-pointer" src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcS5TPu3HoTZkTyxzVY6h3fuKo-nPU85G5u4Vw&s" alt="" />
-                </Link>
-              ) : (
-                <Link href="/auth/login" className="bg-white/10 border border-white/15 hover:bg-white/15 px-4 py-1.5 rounded-md text-sm font-medium transition">
-                  Sign In
-                </Link>
-              )
-            )}
+        <motion.div 
+          initial={{ opacity: 0, y: 100, rotate: -5 }}
+          animate={{ opacity: 1, y: -40, rotate: -2 }}
+          transition={{ duration: 1.2, delay: 0.5, ease: "easeOut" }}
+          className="absolute right-[5%] top-[20%] hidden xl:block z-10 w-[300px]"
+        >
+          <div className="rounded-2xl border border-white/10 bg-white/5 backdrop-blur-2xl p-1 shadow-2xl">
+            <Image src={candidateCard} alt="Floating Card" className="rounded-xl" />
           </div>
+        </motion.div>
 
-          <button
-            onClick={() => setOpen(!open)}
-            className="md:hidden flex flex-col gap-1"
+        <motion.div 
+          initial={{ opacity: 0, scale: 0.8 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 0.8 }}
+          className="relative z-10 text-center max-w-4xl px-6"
+        >
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.2 }}
+            className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/5 border border-white/10 text-[10px] font-bold tracking-[0.2em] text-blue-400 mb-8 uppercase"
           >
-            <span className="w-5 h-[2px] bg-white" />
-            <span className="w-5 h-[2px] bg-white" />
-            <span className="w-5 h-[2px] bg-white" />
-          </button>
-        </header>
+            <span className="relative flex h-2 w-2">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
+              <span className="relative inline-flex rounded-full h-2 w-2 bg-blue-500"></span>
+            </span>
+            Next-Gen Career Intelligence
+          </motion.div>
 
-        {open && (
-          <div className="md:hidden px-6 pb-6 flex flex-col gap-4 text-gray-300">
-            <a href="#">Dashboard</a>
-            <a href="#">Talent</a>
-            <a href="#">Enterprise</a>
-          </div>
-        )}
-
-        <section className="relative z-10 text-center px-6 mt-20">
-          <div className="inline-block text-xs px-3 py-1 rounded-full bg-white/5 border border-white/10 mb-6 text-gray-300">
-            NEXT-GEN CAREER INTELLIGENCE
-          </div>
-
-          <h1 className="text-4xl md:text-6xl font-bold leading-tight tracking-tight">
-            Find work that
-            <br />
-            <span className="text-blue-500">actually fits.</span>
+          <h1 className="text-5xl md:text-8xl font-black mb-8 leading-[1.1] tracking-tighter">
+            Work that <br />
+            <span className="bg-gradient-to-r from-blue-400 via-indigo-400 to-purple-400 bg-clip-text text-transparent">
+              actually fits.
+            </span>
           </h1>
 
-          <p className="mt-6 text-gray-400 max-w-xl mx-auto text-sm md:text-base">
-            AIJob leverages deep career intelligence to move beyond keywords.
+          <p className="text-lg md:text-xl text-gray-400 max-w-2xl mx-auto mb-10 leading-relaxed font-light">
+            AIJob leverages deep career intelligence to move beyond keywords. 
             Discover roles curated specifically for your trajectory, skills, and values.
           </p>
 
-          <div className="mt-8 flex flex-col md:flex-row gap-4 justify-center">
-            <button onClick={handleStart} className="bg-white text-black px-6 py-3 rounded-md text-sm font-medium hover:bg-gray-200">
-              Start My Curation →
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-5">
+            <button 
+              onClick={handleStart}
+              className="group relative px-8 py-4 bg-white text-black rounded-full font-bold transition overflow-hidden"
+            >
+              <div className="absolute inset-0 bg-gradient-to-r from-blue-500/20 to-purple-500/20 translate-y-full group-hover:translate-y-0 transition-transform" />
+              <span className="relative">Start My Curation →</span>
             </button>
-            <button className="bg-white/5 border border-white/10 px-6 py-3 rounded-md text-sm font-medium hover:bg-white/10">
+            <button className="px-8 py-4 bg-white/5 border border-white/10 rounded-full font-bold hover:bg-white/10 transition">
               Hire for Your Team
             </button>
           </div>
-        </section>
+        </motion.div>
 
-        <section className="relative z-10 px-6 mt-20 grid md:grid-cols-2 gap-10 items-center">
-          <img className="rounded-2xl" src="https://images.stockcake.com/public/0/9/6/096012ad-9712-4e07-8f74-9e435d91e76f_large/glowing-cyber-intelligence-stockcake.jpg" alt="" />
+        <motion.div 
+          animate={{ y: [0, 10, 0] }}
+          transition={{ repeat: Infinity, duration: 2 }}
+          className="absolute bottom-10 left-1/2 -translate-x-1/2 text-gray-500"
+        >
+          <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M19 14l-7 7-7-7" strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} /></svg>
+        </motion.div>
+      </section>
 
-          <div>
-            <p className="text-blue-400 text-xs mb-2">FOR ENTERPRISE</p>
-            <h2 className="text-2xl md:text-4xl font-bold">Build teams that stick.</h2>
-            <p className="text-gray-400 mt-4 text-sm">
-              Hiring isn&apos;t just about filling seats. AIJob analyzes team dynamics and technical requirements.
-            </p>
+      <section className="relative z-10 py-20 border-y border-white/5 bg-[#0e121a]/30 backdrop-blur-sm">
+        <div className="max-w-6xl mx-auto px-6 grid grid-cols-2 md:grid-cols-4 gap-8">
+          {[
+            { label: "Active Talent", value: "128k+" },
+            { label: "Companies", value: "540+" },
+            { label: "AI Matches", value: "1.2M" },
+            { label: "Success Rate", value: "94%" },
+          ].map((stat, i) => (
+            <motion.div 
+              key={i}
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              transition={{ delay: i * 0.1 }}
+              viewport={{ once: true }}
+              className="text-center"
+            >
+              <div className="text-3xl font-black mb-1 bg-gradient-to-b from-white to-gray-500 bg-clip-text text-transparent">{stat.value}</div>
+              <div className="text-[10px] text-gray-500 font-bold tracking-widest uppercase">{stat.label}</div>
+            </motion.div>
+          ))}
+        </div>
+      </section>
 
-            <ul className="mt-6 space-y-3 text-sm text-gray-300">
-              <li>• Pre-vetted technical assessments</li>
-              <li>• Automated culture-fit screening</li>
-              <li>• Real-time talent market data</li>
-            </ul>
-
-            <button className="mt-6 bg-white text-black px-5 py-2 rounded-md text-sm">
-              Learn More
-            </button>
-          </div>
-        </section>
-
-        {/* ═══════════ ENHANCED TESTIMONIALS SECTION ═══════════ */}
-        <section className="relative z-10 mt-32 pb-8">
-          {/* Decorative background glow */}
-          <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(99,102,241,0.12),transparent_60%)]" />
-
-          {/* Section Header */}
-          <div className="text-center mb-14 relative z-10">
-            <div className="inline-flex items-center gap-2 text-xs px-4 py-1.5 rounded-full bg-gradient-to-r from-blue-500/10 to-purple-500/10 border border-blue-500/20 mb-5">
-              <span className="w-1.5 h-1.5 rounded-full bg-blue-400 animate-pulse" />
-              <span className="text-blue-300 tracking-wider font-medium">TRUSTED BY THOUSANDS</span>
-            </div>
-            <h3 className="text-3xl md:text-4xl font-bold mb-3 bg-gradient-to-r from-white via-white to-gray-400 bg-clip-text text-transparent">
-              Loved by professionals
-            </h3>
-            <p className="text-gray-500 text-sm md:text-base max-w-md mx-auto">
-              See why top talent across the world chooses AIJob to power their career growth
-            </p>
+      <section id="features" className="relative z-10 py-32 px-6 overflow-hidden">
+        <div className="max-w-6xl mx-auto">
+          <div className="text-center mb-20 space-y-4">
+            <h2 className="text-4xl md:text-6xl font-bold tracking-tighter">Everything to win.</h2>
+            <p className="text-gray-500 max-w-xl mx-auto">A unified ecosystem built for the future of professional networking and recruitment.</p>
           </div>
 
-          {/* Marquee Row 1 — scrolls left */}
-          <div className="reviews-marquee-wrapper mb-5">
-            <div className="reviews-marquee">
-              {[...row1, ...row1, ...row1].map((r, i) => (
-                <ReviewCard key={`r1-${i}`} review={r} />
-              ))}
-            </div>
-          </div>
+          <div className="grid grid-cols-1 md:grid-cols-12 gap-5 h-auto md:h-[600px]">
+            {/* Feature 1: Large */}
+            <motion.div 
+              whileHover={{ y: -5 }}
+              className="md:col-span-7 relative group rounded-3xl bg-[#0e121a] border border-white/10 p-8 overflow-hidden"
+            >
+              <div className="absolute top-0 right-0 w-64 h-64 bg-blue-500/10 rounded-full blur-[100px] group-hover:bg-blue-500/20 transition-all" />
+              <div className="relative z-10 h-full flex flex-col justify-between">
+                <div>
+                  <div className="w-12 h-12 rounded-2xl bg-blue-500/20 border border-blue-500/30 flex items-center justify-center mb-6">
+                    <svg className="w-6 h-6 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M13 10V3L4 14h7v7l9-11h-7z" strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} /></svg>
+                  </div>
+                  <h3 className="text-2xl font-bold mb-4">Neural Matchmaking</h3>
+                  <p className="text-gray-400 max-w-sm">Our AI analyzes your true potential, looking past keywords to find roles that perfectly align with your career trajectory.</p>
+                </div>
+                <div className="mt-8 p-4 rounded-xl bg-white/5 border border-white/5 italic text-sm text-gray-500">
+                  &ldquo;Successfully matched 45 candidates this week in SF.&rdquo;
+                </div>
+              </div>
+            </motion.div>
 
-          {/* Marquee Row 2 — scrolls right */}
-          <div className="reviews-marquee-wrapper">
-            <div className="reviews-marquee reverse">
-              {[...row2, ...row2, ...row2].map((r, i) => (
-                <ReviewCard key={`r2-${i}`} review={r} />
-              ))}
-            </div>
-          </div>
+            {/* Feature 2: Small */}
+            <motion.div 
+              whileHover={{ y: -5 }}
+              className="md:col-span-5 relative group rounded-3xl bg-gradient-to-br from-[#121826] to-[#0e121a] border border-white/10 p-8"
+            >
+              <div className="w-12 h-12 rounded-2xl bg-purple-500/20 border border-purple-500/30 flex items-center justify-center mb-6 text-purple-400">
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z" strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} /></svg>
+              </div>
+              <h3 className="text-2xl font-bold mb-4">Unified Feed</h3>
+              <p className="text-gray-400">The social layer of recruitment. Engage with companies, recruiters, and peers in a real-time professional environment.</p>
+            </motion.div>
 
-          {/* Fade edges */}
-          <div className="pointer-events-none absolute top-0 left-0 w-32 h-full bg-gradient-to-r from-[#05070b] to-transparent z-20" />
-          <div className="pointer-events-none absolute top-0 right-0 w-32 h-full bg-gradient-to-l from-[#05070b] to-transparent z-20" />
-        </section>
-
-        <footer className="relative z-10 mt-24 py-10 text-center text-gray-500 text-sm">
-          AIJob © 2026
-        </footer>
-
-        <style jsx>{`
-          .reviews-marquee-wrapper {
-            overflow: hidden;
-            position: relative;
-            width: 100%;
-          }
-          .reviews-marquee {
-            display: flex;
-            gap: 1.25rem;
-            width: max-content;
-            animation: marquee-left 40s linear infinite;
-          }
-          .reviews-marquee.reverse {
-            animation: marquee-right 40s linear infinite;
-          }
-          .reviews-marquee-wrapper:hover .reviews-marquee {
-            animation-play-state: paused;
-          }
-          @keyframes marquee-left {
-            0% { transform: translateX(0); }
-            100% { transform: translateX(-33.333%); }
-          }
-          @keyframes marquee-right {
-            0% { transform: translateX(-33.333%); }
-            100% { transform: translateX(0); }
-          }
-        `}</style>
-      </main>
-
-      <footer className="relative z-10 border-t bg-[#05070b] p-20">
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_100%,rgba(59,130,246,0.15),transparent_70%)]" />
-
-        <div className="relative px-6 py-12 max-w-6xl mx-auto grid md:grid-cols-4 gap-10 text-sm">
-          <div>
-            <h3 className="text-lg font-semibold mb-4 text-white">AIJob</h3>
-            <p className="text-gray-400">
-              Smarter job discovery powered by AI. Find work that actually fits your skills and goals.
-            </p>
-          </div>
-
-          <div>
-            <h4 className="font-medium mb-3 text-white">Product</h4>
-            <ul className="space-y-2 text-gray-400">
-              <li><a href="#" className="hover:text-white">Features</a></li>
-              <li><a href="#" className="hover:text-white">Pricing</a></li>
-              <li><a href="#" className="hover:text-white">Updates</a></li>
-            </ul>
-          </div>
-
-          <div>
-            <h4 className="font-medium mb-3 text-white">Company</h4>
-            <ul className="space-y-2 text-gray-400">
-              <li><a href="#" className="hover:text-white">About</a></li>
-              <li><a href="#" className="hover:text-white">Careers</a></li>
-              <li><a href="#" className="hover:text-white">Contact</a></li>
-            </ul>
-          </div>
-
-          <div>
-            <h4 className="font-medium mb-3 text-white">Stay updated</h4>
-            <div className="flex items-center gap-2">
-              <input
-                placeholder="Email"
-                className="w-full px-3 py-2 rounded-md bg-white/5 border border-white/10 text-sm outline-none focus:border-blue-500"
-              />
-              <button className="px-4 py-2 bg-blue-500 rounded-md text-sm hover:bg-blue-600">
-                Join
-              </button>
-            </div>
+            {/* Feature 3: Small */}
+            <motion.div 
+              whileHover={{ y: -5 }}
+              className="md:col-span-5 relative group rounded-3xl bg-[#0e121a] border border-white/10 p-8"
+            >
+              <div className="w-12 h-12 rounded-2xl bg-emerald-500/20 border border-emerald-500/30 flex items-center justify-center mb-6 text-emerald-400">
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} /></svg>
+              </div>
+              <h3 className="text-2xl font-bold mb-4">Verified Talent</h3>
+              <p className="text-gray-400">Skill verification and background highlights integrated directly into every candidate profile.</p>
+            </motion.div>
+            <motion.div 
+              whileHover={{ y: -5 }}
+              className="md:col-span-7 relative group rounded-3xl bg-gradient-to-tr from-[#0e121a] to-[#1a1f2e] border border-white/10 p-8 overflow-hidden"
+            >
+              <div className="absolute inset-0 opacity-10 blur-3xl bg-indigo-500 group-hover:opacity-20 transition" />
+              <div className="relative z-10 flex flex-col justify-between h-full">
+                <div>
+                  <div className="w-12 h-12 rounded-2xl bg-indigo-500/20 border border-indigo-500/30 flex items-center justify-center mb-6 text-indigo-400">
+                    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} /></svg>
+                  </div>
+                  <h3 className="text-2xl font-bold mb-4">Market Intelligence</h3>
+                  <p className="text-gray-400 max-w-sm">Stay ahead with real-time briefing on hiring trends, salary shifts, and technology adoption rates.</p>
+                </div>
+              </div>
+            </motion.div>
           </div>
         </div>
+      </section>
 
-        <div className="relative border-t border-white/10 px-6 py-6 text-center text-gray-500 text-xs">
-          © 2026 AIJob. All rights reserved.
-        </div>
-      </footer>
-    </>
-  )
-}
+      <section className="relative z-10 py-32 bg-white/5 border-y border-white/5">
+        <div className="max-w-6xl mx-auto px-6">
+          <div className="text-center mb-20">
+            <h2 className="text-4xl font-black mb-4 tracking-tighter">Your path to success.</h2>
+            <p className="text-gray-500">Transforming the complex search into a three-step journey.</p>
+          </div>
 
-/* ═══════════ REVIEW CARD COMPONENT ═══════════ */
-interface ReviewData {
-  name: string
-  role: string
-  company: string
-  text: string
-  stars: number
-  avatar: string
-  gradient: string
-}
-
-function ReviewCard({ review }: { review: ReviewData }) {
-  const cardRef = useRef<HTMLDivElement>(null)
-
-  const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
-    const card = cardRef.current
-    if (!card) return
-    const rect = card.getBoundingClientRect()
-    const x = e.clientX - rect.left
-    const y = e.clientY - rect.top
-    const centerX = rect.width / 2
-    const centerY = rect.height / 2
-    const rotateX = ((y - centerY) / centerY) * -8
-    const rotateY = ((x - centerX) / centerX) * 8
-    card.style.transform = `perspective(800px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) scale(1.04)`
-
-    // Move glow
-    const glow = card.querySelector('.review-glow') as HTMLElement
-    if (glow) {
-      glow.style.background = `radial-gradient(300px circle at ${x}px ${y}px, rgba(99,102,241,0.2), transparent 60%)`
-    }
-  }
-
-  const handleMouseLeave = () => {
-    const card = cardRef.current
-    if (!card) return
-    card.style.transform = 'perspective(800px) rotateX(0deg) rotateY(0deg) scale(1)'
-    const glow = card.querySelector('.review-glow') as HTMLElement
-    if (glow) {
-      glow.style.background = 'transparent'
-    }
-  }
-
-  return (
-    <div
-      ref={cardRef}
-      onMouseMove={handleMouseMove}
-      onMouseLeave={handleMouseLeave}
-      className="review-card group"
-      style={{
-        minWidth: '340px',
-        maxWidth: '340px',
-        transition: 'transform 0.2s ease-out, box-shadow 0.3s ease',
-      }}
-    >
-      <div className="relative overflow-hidden rounded-2xl border border-white/[0.08] bg-white/[0.03] backdrop-blur-md p-6 h-full hover:border-blue-500/30 hover:shadow-[0_0_40px_-10px_rgba(99,102,241,0.3)] transition-all duration-300">
-        {/* Glow overlay */}
-        <div className="review-glow absolute inset-0 rounded-2xl pointer-events-none transition-all duration-300" />
-
-        {/* Content */}
-        <div className="relative z-10">
-          {/* Stars */}
-          <div className="flex gap-0.5 mb-4">
-            {Array.from({ length: 5 }).map((_, i) => (
-              <svg
+          <div className="grid md:grid-cols-3 gap-12 relative">
+            <div className="absolute top-1/2 left-0 w-full h-0.5 bg-gradient-to-r from-transparent via-white/5 to-transparent hidden md:block" />
+            
+            {[
+              { title: "Define Your Path", desc: "Share your skills, values, and vision for the future." },
+              { title: "Review Curations", desc: "Our AI presents roles that aren't just open—they're right." },
+              { title: "Fast-Track Hire", desc: "Direct connections and verified checks speed up the process." },
+            ].map((step, i) => (
+              <motion.div 
                 key={i}
-                className={`w-4 h-4 ${i < review.stars ? 'text-amber-400' : 'text-gray-700'}`}
-                fill="currentColor"
-                viewBox="0 0 20 20"
+                initial={{ opacity: 0, scale: 0.9 }}
+                whileInView={{ opacity: 1, scale: 1 }}
+                viewport={{ once: true }}
+                transition={{ delay: i * 0.2 }}
+                className="relative z-10 p-8 rounded-3xl bg-[#05070b] border border-white/10 text-center group hover:border-blue-500 transition"
               >
-                <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-              </svg>
+                <div className="w-14 h-14 rounded-full bg-white text-black text-xl font-black flex items-center justify-center mx-auto mb-6 group-hover:scale-110 transition">
+                  {i + 1}
+                </div>
+                <h4 className="text-xl font-bold mb-2">{step.title}</h4>
+                <p className="text-gray-500 text-sm">{step.desc}</p>
+              </motion.div>
             ))}
           </div>
+        </div>
+      </section>
 
-          {/* Review text */}
-          <p className="text-sm text-gray-300 leading-relaxed mb-5 whitespace-normal">
-            &ldquo;{review.text}&rdquo;
-          </p>
-
-          {/* Author */}
-          <div className="flex items-center gap-3">
-            <div className={`w-10 h-10 rounded-full bg-gradient-to-br ${review.gradient} flex items-center justify-center text-white text-xs font-bold shadow-lg`}>
-              {review.avatar}
+      <section className="relative z-10 py-32 overflow-hidden">
+        <div className="text-center mb-20">
+          <h2 className="text-4xl font-bold tracking-tighter">Trusted by the best.</h2>
+        </div>
+        
+        <div className="flex gap-10 whitespace-nowrap animate-marquee-left hover:pause py-10">
+          {[...reviews, ...reviews].map((review, i) => (
+            <div key={i} className="inline-block w-[350px] p-8 rounded-2xl bg-white/5 border border-white/10 backdrop-blur-sm">
+              <div className="flex items-center gap-3 mb-4">
+                <div className={`w-10 h-10 rounded-full bg-gradient-to-br ${review.gradient} flex items-center justify-center font-bold text-xs`}>{review.avatar}</div>
+                <div>
+                  <div className="font-bold text-sm">{review.name}</div>
+                  <div className="text-gray-500 text-xs">{review.role} @ {review.company}</div>
+                </div>
+              </div>
+              <p className="text-gray-400 text-sm italic leading-relaxed whitespace-normal">&ldquo;{review.text}&rdquo;</p>
             </div>
-            <div>
-              <p className="text-sm font-medium text-white">{review.name}</p>
-              <p className="text-xs text-gray-500">{review.role} · {review.company}</p>
+          ))}
+        </div>
+      </section>
+
+      <section className="relative z-10 py-32 px-6">
+        <div className="max-w-4xl mx-auto rounded-[3rem] bg-gradient-to-b from-blue-600 to-indigo-700 p-12 md:p-20 text-center shadow-2xl shadow-blue-500/20 relative overflow-hidden">
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(0,0,0,0.2),transparent_100%)]" />
+          <motion.div 
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            className="relative z-10"
+          >
+            <h2 className="text-4xl md:text-6xl font-black text-white mb-8 tracking-tighter">Ready to evolve <br /> your career?</h2>
+            <button 
+              onClick={handleStart}
+              className="px-10 py-5 bg-white text-blue-600 rounded-full font-black text-lg hover:scale-105 transition shadow-xl"
+            >
+              Get Started Now
+            </button>
+          </motion.div>
+        </div>
+      </section>
+
+      <footer className="relative z-10 bg-[#05070b] border-t border-white/5 py-20 px-6">
+        <div className="max-w-6xl mx-auto grid md:grid-cols-4 gap-12 text-sm">
+          <div className="space-y-4">
+            <div className="text-xl font-black">AIJob</div>
+            <p className="text-gray-500 leading-relaxed">Intelligence for the modern workforce. Built for the era of talent.</p>
+          </div>
+          <div>
+            <h5 className="font-bold mb-6 text-white uppercase tracking-widest text-[10px]">Product</h5>
+            <ul className="space-y-4 text-gray-500">
+              <li><a href="#">Network</a></li>
+              <li><a href="#">Feed</a></li>
+              <li><a href="#">Pricing</a></li>
+            </ul>
+          </div>
+          <div>
+            <h5 className="font-bold mb-6 text-white uppercase tracking-widest text-[10px]">Resources</h5>
+            <ul className="space-y-4 text-gray-500">
+              <li><a href="#">Blog</a></li>
+              <li><a href="#">Support</a></li>
+              <li><a href="#">API Docs</a></li>
+            </ul>
+          </div>
+          <div>
+            <h5 className="font-bold mb-6 text-white uppercase tracking-widest text-[10px]">Connect</h5>
+            <div className="flex gap-4">
+              <div className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center hover:bg-white/10 transition cursor-pointer">𝕏</div>
+              <div className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center hover:bg-white/10 transition cursor-pointer">in</div>
             </div>
           </div>
         </div>
-      </div>
+      </footer>
+
+      <style jsx global>{`
+        @keyframes marquee-left {
+          0% { transform: translateX(0); }
+          100% { transform: translateX(-50%); }
+        }
+        .animate-marquee-left {
+          display: flex;
+          animation: marquee-left 30s linear infinite;
+          width: max-content;
+        }
+        .pause:hover {
+          animation-play-state: paused;
+        }
+      `}</style>
     </div>
   )
 }

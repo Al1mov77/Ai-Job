@@ -96,13 +96,11 @@ export default function ProfilePage() {
 
   const { data: connections } = useQuery({
     queryKey: ["userConnections"],
-    // Returns all connections for the authenticated user
     queryFn: () => axiosInstance.get('/Connection/all').then(r => r.data?.data || []),
     enabled: isLoggedIn,
   });
 
   const postCount = userPosts?.length || 0;
-  // Based on the accessible API endpoints:
   const followersCount = connections?.filter((c: any) => c.addresseeId === userId && c.status === 'Accepted').length || 0;
   const followingCount = connections?.filter((c: any) => c.requesterId === userId && c.status === 'Accepted').length || 0;
 
@@ -173,7 +171,7 @@ export default function ProfilePage() {
                 href={item.link}
                 onClick={() => setActiveTab(item.id)}
                 className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all ${
-                  activeTab === item.id || (item.id === 'profile') // Highlight profile since we are on it
+                  activeTab === item.id || (item.id === 'profile')
                     ? "bg-blue-600/10 text-blue-400"
                     : "text-gray-400 hover:text-white hover:bg-white/5"
                 }`}
@@ -196,19 +194,15 @@ export default function ProfilePage() {
               
               {/* Main Content Column */}
               <div className="flex-1 w-full space-y-6">
-                {/* Banner & Header Card */}
                 <div className="relative rounded-2xl bg-[#0e121a] border border-white/5 overflow-hidden shadow-xl">
-                  {/* Banner image or gradient placeholder */}
                   <div className={`h-40 md:h-52 w-full ${profile?.backgroundPhotoUrl ? '' : 'bg-gradient-to-r from-blue-900/40 via-indigo-900/40 to-purple-900/40'}`}>
                     {profile?.backgroundPhotoUrl && (
                       <img src={profile.backgroundPhotoUrl} alt="Banner" className="w-full h-full object-cover opacity-60" />
                     )}
                   </div>
 
-                  {/* Profile Info */}
                   <div className="px-6 pb-6 lg:px-10 lg:pb-8 relative">
                     <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end -mt-16 sm:-mt-20 mb-6 gap-4">
-                      {/* Avatar */}
                       <div className="w-32 h-32 md:w-40 md:h-40 rounded-2xl bg-[#05070c] p-2 flex-shrink-0 z-10 border-4 border-[#05070c] relative">
                         {profile?.photoUrl ? (
                           <img src={profile.photoUrl} alt="Avatar" className="w-full h-full object-cover rounded-xl" />
@@ -220,7 +214,6 @@ export default function ProfilePage() {
                         <span className="absolute bottom-1 right-1 w-4 h-4 bg-emerald-500 border-2 border-[#05070c] rounded-full z-20"></span>
                       </div>
 
-                      {/* Actions */}
                       <div className="flex items-center gap-3 w-full sm:w-auto">
                         {isOwnProfile ? (
                           <button className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-6 py-2.5 bg-white/5 border border-white/10 hover:bg-white/10 text-white rounded-lg font-medium text-sm transition-colors">
@@ -263,7 +256,6 @@ export default function ProfilePage() {
                   </div>
                 </div>
 
-                {/* Real Stats fetched from API */}
                 <div className="grid grid-cols-3 gap-4">
                   <div className="bg-[#0e121a] border border-white/5 rounded-2xl p-6 flex flex-col items-center justify-center shadow-lg">
                     <span className="text-2xl font-bold text-white mb-1">{postCount}</span>
@@ -279,7 +271,6 @@ export default function ProfilePage() {
                   </div>
                 </div>
 
-                {/* About section */}
                 <div className="bg-[#0e121a] border border-white/5 rounded-2xl p-6 md:p-8 shadow-lg">
                   <h3 className="flex items-center gap-2 text-base font-bold text-white mb-4">
                     <div className="w-6 h-6 rounded-full bg-blue-500/20 flex items-center justify-center text-blue-400">
@@ -292,7 +283,6 @@ export default function ProfilePage() {
                   </p>
                 </div>
 
-                {/* Experience section */}
                 <div className="bg-[#0e121a] border border-white/5 rounded-2xl p-6 md:p-8 shadow-lg">
                   <h3 className="flex items-center gap-2 text-base font-bold text-white mb-6">
                     <div className="w-6 h-6 rounded-full bg-emerald-500/20 flex items-center justify-center text-emerald-400">
@@ -324,10 +314,8 @@ export default function ProfilePage() {
                 </div>
               </div>
 
-              {/* Right Sidebar */}
               <div className="w-full xl:w-80 flex-shrink-0 space-y-6">
                 
-                {/* Skills */}
                 <div className="bg-[#0e121a] border border-white/5 rounded-2xl p-6 shadow-lg">
                   <h3 className="flex items-center gap-2 text-base font-bold text-white mb-5">
                     <div className="w-6 h-6 rounded-full bg-purple-500/20 flex items-center justify-center text-purple-400">

@@ -67,7 +67,6 @@ function DashboardPage() {
   const [mounted, setMounted] = useState(false);
   const [activeDropdown, setActiveDropdown] = useState<number | null>(null);
 
-  // Comments state
   const [expandedComments, setExpandedComments] = useState<Record<number, boolean>>({});
   const [commentsData, setCommentsData] = useState<Record<number, CommentItem[]>>({});
   const [isLoadingComments, setIsLoadingComments] = useState<Record<number, boolean>>({});
@@ -86,7 +85,6 @@ function DashboardPage() {
   const fetchFeed = async () => {
     setIsLoadingPosts(true);
     try {
-      // Fetch all posts globally
       const res = await axiosInstance.get("/Post");
       if (res.data?.data) {
         setPosts(res.data.data);
