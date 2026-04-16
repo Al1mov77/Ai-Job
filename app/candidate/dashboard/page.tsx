@@ -70,6 +70,7 @@ function DashboardPage() {
   const [isLoadingComments, setIsLoadingComments] = useState<Record<number, boolean>>({});
   const [commentInputs, setCommentInputs] = useState<Record<number, string>>({});
   const [isSubmittingComment, setIsSubmittingComment] = useState<Record<number, boolean>>({});
+  const [commentErrors, setCommentErrors] = useState<Record<number, string>>({});
 
   useEffect(() => {
     loadFromStorage();
@@ -165,9 +166,12 @@ function DashboardPage() {
 
     if (isExpanding) {
       setIsLoadingComments(prev => ({ ...prev, [postId]: true }));
+      setCommentErrors(prev => ({ ...prev, [postId]: "" }));
       try {
         const res = await axiosInstance.get(`/Post/${postId}/comments`);
-        if (res.data?.data) {
+        if (res.data?.statusCode === 403 || res.data?.statusCode === 400 || res.data?.statusCode === 500) {
+          setCommentErrors(prev => ({ ...prev, [postId]: res.data?.description?.[0] || "Cannot load comments" }));
+        } else if (res.data?.data) {
           setCommentsData(prev => ({ ...prev, [postId]: res.data.data }));
         }
       } catch (err) {
@@ -442,6 +446,10 @@ function DashboardPage() {
                         <div className="mt-4 pt-4 border-t border-white/[0.06]">
                           {isLoadingComments[post.id] ? (
                             <div className="py-4 text-center text-sm text-gray-500">Loading comments...</div>
+                          ) : commentErrors[post.id] ? (
+                            <div className="py-4 text-center text-sm text-red-400 bg-red-400/10 rounded-lg border border-red-400/20">
+                              {commentErrors[post.id]}
+                            </div>
                           ) : (
                             <div className="space-y-4">
                               {(commentsData[post.id] || []).length === 0 ? (
