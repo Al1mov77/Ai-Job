@@ -271,8 +271,8 @@ function DashboardContent() {
             <Link href="/" className="text-xl font-bold text-white">AIJob</Link>
             <nav className="hidden md:flex gap-6 text-sm">
               <Link href="/candidate/dashboard" className="text-blue-400 border-b-2 border-blue-400 pb-1">Dashboard</Link>
-              <a href="#" className="text-gray-400 hover:text-white">Talent</a>
-              <a href="#" className="text-gray-400 hover:text-white">Enterprise</a>
+              <Link href="/candidate/jobs" className="text-gray-400 hover:text-white transition">Talent</Link>
+              <a href="#" className="text-gray-400 hover:text-white transition">Enterprise</a>
             </nav>
           </div>
           <div className="flex items-center gap-4">
@@ -304,6 +304,8 @@ function DashboardContent() {
                 onClick={() => {
                   if (item.id === "profile") {
                     router.push("/candidate/profile");
+                  } else if (item.id === "jobs") {
+                    router.push("/candidate/jobs");
                   } else {
                     setActiveTab(item.id);
                   }

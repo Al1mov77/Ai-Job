@@ -3,7 +3,9 @@ import Image from "next/image";
 import img2 from "@/app/assets/2.png";
 import { useState, Suspense } from "react";
 import Link from "next/link";
-import { useSearchParams } from "next/navigation";
+import { useSearchParams, useRouter } from "next/navigation";
+import { axiosInstance } from "@/lib/axios";
+import { toast } from "sonner";
 
 export default function ResetPasswordPage() {
   return (
@@ -19,13 +21,20 @@ export default function ResetPasswordPage() {
 
 function ResetPasswordContent() {
   const searchParams = useSearchParams();
+  const router = useRouter();
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [done, setDone] = useState(false);
   const [error, setError] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const token = searchParams.get("token");
+  const email = searchParams.get("email");
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setError("");
+    
     if (password !== confirmPassword) {
       setError("Passwords do not match");
       return;
@@ -34,7 +43,27 @@ function ResetPasswordContent() {
       setError("Password must be at least 8 characters");
       return;
     }
-    setDone(true);
+    if (!token || !email) {
+      setError("Invalid or missing reset token/email");
+      return;
+    }
+
+    setIsLoading(true);
+    try {
+      await axiosInstance.post("/Auth/reset-password", {
+        email,
+        token,
+        newPassword: password
+      });
+      setDone(true);
+      toast.success("Password reset successful!");
+    } catch (err: any) {
+      const msg = err.response?.data?.message || "Failed to reset password. Link may be expired.";
+      setError(msg);
+      toast.error(msg);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (

@@ -14,6 +14,7 @@ export default function RegisterPage() {
     password: "",
     confirmPassword: "",
     phoneNumber: "",
+    role: "Candidate" as "Candidate" | "Organization",
   });
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
   const [networkError, setNetworkError] = useState<string>("");
@@ -33,12 +34,6 @@ export default function RegisterPage() {
 
     if (formData.password.length < 8) {
       newErrors.password = "Password must be at least 8 characters";
-    } else if (!/[A-Z]/.test(formData.password)) {
-      newErrors.password = "Password must contain at least one uppercase letter (A-Z)";
-    } else if (!/[0-9]/.test(formData.password)) {
-      newErrors.password = "Password must contain at least one digit (0-9)";
-    } else if (!/[^a-zA-Z0-9]/.test(formData.password)) {
-      newErrors.password = "Password must contain at least one special character (!@#$%^&* etc.)";
     }
 
     if (formData.password !== formData.confirmPassword) {
@@ -49,7 +44,7 @@ export default function RegisterPage() {
     return Object.keys(newErrors).length == 0;
   };
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
@@ -67,7 +62,7 @@ export default function RegisterPage() {
         email: formData.email,
         password: formData.password,
         phoneNumber: formData.phoneNumber || undefined,
-        role: "Candidate",
+        role: formData.role,
       });
 
       toast.success("Account created successfully! Please sign in.");
@@ -75,11 +70,6 @@ export default function RegisterPage() {
     } catch (err: any) {
       console.error("Register error:", err);
       toast.error(err.response?.data?.message || err.message || "Failed to create account.");
-      if (err.message === "Network Error" || !err.response) {
-        setNetworkError(
-          "Cannot connect to server. Please check if API is available at http://157.180.29.248:8090/api"
-        );
-      }
     }
   };
 
@@ -103,7 +93,20 @@ export default function RegisterPage() {
             Join AIJob and start your career journey
           </p>
 
-          <form onSubmit={handleSubmit} className="space-y-3">
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium mb-1">Account Type</label>
+              <select
+                name="role"
+                value={formData.role}
+                onChange={handleChange}
+                className="w-full px-4 py-2 rounded-md bg-white/5 border border-white/10 outline-none focus:border-blue-500 text-white text-sm appearance-none cursor-pointer hover:bg-white/10 transition"
+              >
+                <option value="Candidate" className="bg-[#05070b]">Candidate</option>
+                <option value="Organization" className="bg-[#05070b]">Organization</option>
+              </select>
+            </div>
+
             <div>
               <label className="block text-sm font-medium mb-1">
                 Full Name
@@ -136,41 +139,33 @@ export default function RegisterPage() {
               )}
             </div>
 
-            <div>
-              <label className="block text-sm font-medium mb-1">
-                Password
-              </label>
-              <input
-                type="password"
-                name="password"
-                value={formData.password}
-                onChange={handleChange}
-                placeholder="Min 8 chars, 1 uppercase, 1 digit, 1 special char"
-                className="w-full px-4 py-2 rounded-md bg-white/5 border border-white/10 outline-none focus:border-blue-500 text-white placeholder-gray-500 text-sm"
-              />
-              {errors.password && (
-                <p className="text-red-500 text-xs mt-1">{errors.password}</p>
-              )}
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium mb-1">Password</label>
+                <input
+                  type="password"
+                  name="password"
+                  value={formData.password}
+                  onChange={handleChange}
+                  placeholder="••••••••"
+                  className="w-full px-4 py-2 rounded-md bg-white/5 border border-white/10 outline-none focus:border-blue-500 text-white placeholder-gray-500 text-sm"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-1">Confirm</label>
+                <input
+                  type="password"
+                  name="confirmPassword"
+                  value={formData.confirmPassword}
+                  onChange={handleChange}
+                  placeholder="••••••••"
+                  className="w-full px-4 py-2 rounded-md bg-white/5 border border-white/10 outline-none focus:border-blue-500 text-white placeholder-gray-500 text-sm"
+                />
+              </div>
             </div>
-
-            <div>
-              <label className="block text-sm font-medium mb-1">
-                Confirm Password
-              </label>
-              <input
-                type="password"
-                name="confirmPassword"
-                value={formData.confirmPassword}
-                onChange={handleChange}
-                placeholder="••••••••"
-                className="w-full px-4 py-2 rounded-md bg-white/5 border border-white/10 outline-none focus:border-blue-500 text-white placeholder-gray-500 text-sm"
-              />
-              {errors.confirmPassword && (
-                <p className="text-red-500 text-xs mt-1">
-                  {errors.confirmPassword}
-                </p>
-              )}
-            </div>
+            {(errors.password || errors.confirmPassword) && (
+              <p className="text-red-500 text-xs mt-1">{errors.password || errors.confirmPassword}</p>
+            )}
 
             <div>
               <label className="block text-sm font-medium mb-1">
