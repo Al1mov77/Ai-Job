@@ -9,6 +9,7 @@ import { axiosInstance } from "@/lib/axios";
 import { toast } from "sonner";
 import NotificationsTab from "@/components/dashboard/NotificationsTab";
 import MessagesTab from "@/components/dashboard/MessagesTab";
+import AiToolsTab from "@/components/dashboard/AiToolsTab";
 
 interface Organization {
   id: number;
@@ -258,6 +259,10 @@ function OrganizationDashboardPage() {
           <button onClick={() => setActiveTab("vacancy")} className={`flex items-center gap-3 px-4 py-3 rounded-xl text-sm transition ${activeTab === "vacancy" ? "bg-blue-500/10 text-blue-400 font-medium" : "text-gray-400 hover:bg-white/5"}`}>Post Vacancy</button>
           <button onClick={() => setActiveTab("messages")} className={`flex items-center gap-3 px-4 py-3 rounded-xl text-sm transition ${activeTab === "messages" ? "bg-blue-500/10 text-blue-400 font-medium" : "text-gray-400 hover:bg-white/5"}`}>Messages</button>
           <button onClick={() => setActiveTab("notifications")} className={`flex items-center gap-3 px-4 py-3 rounded-xl text-sm transition ${activeTab === "notifications" ? "bg-blue-500/10 text-blue-400 font-medium" : "text-gray-400 hover:bg-white/5"}`}>Notifications</button>
+          <button onClick={() => setActiveTab("ai")} className={`flex items-center gap-3 px-4 py-3 rounded-xl text-sm transition ${activeTab === "ai" ? "bg-blue-500/10 text-blue-400 font-medium" : "text-gray-400 hover:bg-white/5"}`}>
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>
+            Ai Tools
+          </button>
           <button onClick={handleLogout} className="mt-auto flex items-center gap-3 px-4 py-3 rounded-xl text-sm text-red-500 hover:bg-red-500/10 transition font-bold">Sign Out</button>
         </aside>
 
@@ -312,6 +317,7 @@ function OrganizationDashboardPage() {
 
           {activeTab === "messages" && <MessagesTab />}
           {activeTab === "notifications" && <NotificationsTab />}
+          {activeTab === "ai" && <AiToolsTab />}
         </main>
       </div>
     </div>

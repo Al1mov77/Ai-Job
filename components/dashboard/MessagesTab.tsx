@@ -73,7 +73,7 @@ export default function MessagesTab() {
       await sendMessage(messageText);
       setMessageText("");
     } catch (err) {
-      toast.error("Failed to send message");
+      toast.error("Failed to send");
     } finally {
       setIsSending(false);
     }
